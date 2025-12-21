@@ -5,6 +5,8 @@ const os = require('os');
 
 // 导入键盘模拟模块
 const { sendTextToETX } = require('./keyboard.js');
+// 导入新的焦点管理模块
+const { recordFocusInfo, restoreFocus } = require('./focus-manager.js');
 
 // 保持对窗口对象的全局引用
 let inputWindow = null;
@@ -25,13 +27,43 @@ let config = {
   opacity: 80,
   theme: 'light',
   windowHeight: 120,
-  windowWidth: 600
+  windowWidth: 600,
+  // 粘贴行为配置
+  focusSwitchMethod: 'mouse-left', // 焦点切换方式: 'none' | 'api' | 'mouse-left'
+  pasteMethod: 'mouse-middle' // 粘贴方案: 'mouse-middle' | 'ctrl-shift-v' | 'ctrl-v'
 };
 
 // 历史记录配置
 const historyPath = path.join(os.homedir(), '.etxtool', 'history.json');
 const maxHistoryItems = 100; // 最多保存100条历史记录
 let inputHistory = [];
+
+// 焦点窗口记录
+let lastFocusedWindow = null;
+
+// 恢复焦点窗口
+function restoreFocusWindow() {
+  if (config.focusSwitchMethod === 'api' && lastFocusedWindow) {
+    try {
+      console.log('开始恢复焦点窗口...');
+      return restoreFocus(lastFocusedWindow).then(success => {
+        if (success) {
+          console.log('焦点窗口恢复成功');
+        } else {
+          console.log('焦点窗口恢复失败');
+        }
+        return success;
+      }).catch(error => {
+        console.error('恢复焦点窗口出错:', error);
+        return false;
+      });
+    } catch (error) {
+      console.error('恢复焦点窗口失败:', error);
+      return Promise.resolve(false);
+    }
+  }
+  return Promise.resolve(false);
+}
 
 // 加载配置
 function loadConfig() {
@@ -111,6 +143,31 @@ function addToHistory(text) {
 
 // 创建输入窗口
 function createInputWindow() {
+  // 记录当前焦点信息（如果使用API切换方式）
+  if (config.focusSwitchMethod === 'api') {
+    try {
+      console.log('开始记录焦点信息...');
+      recordFocusInfo().then(windowInfo => {
+        if (windowInfo) {
+          lastFocusedWindow = windowInfo;
+          console.log('焦点信息记录成功:', {
+            title: windowInfo.title,
+            ownerName: windowInfo.owner.name
+          });
+        } else {
+          console.log('焦点信息记录失败');
+          lastFocusedWindow = null;
+        }
+      }).catch(error => {
+        console.error('记录焦点信息出错:', error);
+        lastFocusedWindow = null;
+      });
+    } catch (error) {
+      console.error('记录焦点信息失败:', error);
+      lastFocusedWindow = null;
+    }
+  }
+
   if (inputWindow) {
     inputWindow.show();
     inputWindow.focus();
@@ -611,8 +668,6 @@ function registerGlobalShortcut() {
   } else {
     console.log(`快捷键 ${config.hotkey} 注册成功`);
   }
-  
-  
 }
 
 // IPC 处理程序
@@ -662,12 +717,14 @@ ipcMain.handle('send-text', async (event, text) => {
       inputWindow.webContents.send('clear-input');
     }
 
-    await sendTextToETX(text);
-    
-    // 隐藏输入窗口
+    // 先隐藏输入窗口
     if (inputWindow && !inputWindow.isDestroyed()) {
       inputWindow.hide();
     }
+
+    // 执行发送文本操作，传递焦点窗口信息
+    const sendConfig = { ...config, lastFocusedWindow };
+    await sendTextToETX(text, sendConfig);
   } catch (error) {
     console.error('发送文本失败:', error);
   }

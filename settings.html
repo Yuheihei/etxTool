@@ -298,6 +298,74 @@
             </div>
         </div>
         
+        <div class="form-group">
+            <label>焦点切换方式</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input 
+                        type="radio" 
+                        id="focus-none" 
+                        value="none"
+                        v-model="localConfig.focusSwitchMethod"
+                    >
+                    <label for="focus-none">不切换窗口</label>
+                </div>
+                <div class="radio-option">
+                    <input 
+                        type="radio" 
+                        id="focus-api" 
+                        value="api"
+                        v-model="localConfig.focusSwitchMethod"
+                    >
+                    <label for="focus-api">使用API切换回原应用</label>
+                </div>
+                <div class="radio-option">
+                    <input 
+                        type="radio" 
+                        id="focus-mouse" 
+                        value="mouse-left"
+                        v-model="localConfig.focusSwitchMethod"
+                    >
+                    <label for="focus-mouse">使用鼠标左键切换</label>
+                </div>
+            </div>
+            <div class="hint">选择输入完成后如何切换焦点回原应用</div>
+        </div>
+        
+        <div class="form-group">
+            <label>粘贴方案</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input 
+                        type="radio" 
+                        id="paste-middle" 
+                        value="mouse-middle"
+                        v-model="localConfig.pasteMethod"
+                    >
+                    <label for="paste-middle">鼠标中键点击</label>
+                </div>
+                <div class="radio-option">
+                    <input 
+                        type="radio" 
+                        id="paste-ctrl-shift-v" 
+                        value="ctrl-shift-v"
+                        v-model="localConfig.pasteMethod"
+                    >
+                    <label for="paste-ctrl-shift-v">Ctrl+Shift+V (Mac: Cmd+Shift+V)</label>
+                </div>
+                <div class="radio-option">
+                    <input 
+                        type="radio" 
+                        id="paste-ctrl-v" 
+                        value="ctrl-v"
+                        v-model="localConfig.pasteMethod"
+                    >
+                    <label for="paste-ctrl-v">Ctrl+V (Mac: Cmd+V)</label>
+                </div>
+            </div>
+            <div class="hint">选择粘贴文本的方式</div>
+        </div>
+        
         <div class="button-container">
             <button class="btn btn-save" @click="saveSettings">保存</button>
             <button class="btn btn-cancel" @click="cancelSettings">取消</button>
@@ -317,7 +385,9 @@
                         opacity: 80,
                         theme: 'light',
                         windowHeight: 120,
-                        windowWidth: 600
+                        windowWidth: 600,
+                        focusSwitchMethod: 'mouse-left',
+                        pasteMethod: 'mouse-middle'
                     },
                     showSuccess: false
                 };
@@ -361,7 +431,9 @@
                             opacity: this.localConfig.opacity,
                             theme: this.localConfig.theme,
                             windowHeight: this.localConfig.windowHeight,
-                            windowWidth: this.localConfig.windowWidth
+                            windowWidth: this.localConfig.windowWidth,
+                            focusSwitchMethod: this.localConfig.focusSwitchMethod,
+                            pasteMethod: this.localConfig.pasteMethod
                         };
                         await window.electronAPI.saveConfig(configToSave);
                         this.config = { ...configToSave };
