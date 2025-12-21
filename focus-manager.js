@@ -156,26 +156,7 @@ async function recordFocusInfo() {
   }
 }
 
-// 恢复焦点（简化版）
-async function restoreFocus(focusInfo) {
-  try {
-    if (!focusInfo) {
-      console.log(`[${new Date().toISOString()}] 没有焦点信息，无法恢复`);
-      return false;
-    }
-    
-    console.log(`[${new Date().toISOString()}] 尝试恢复焦点:`, {
-      title: focusInfo.title,
-      ownerName: focusInfo.owner.name
-    });
-    
-    return await restoreToWindow(focusInfo);
-    
-  } catch (error) {
-    console.error(`[${new Date().toISOString()}] 恢复焦点失败:`, error);
-    return false;
-  }
-}
+
 
 // 测试功能
 async function testFocusManager() {
@@ -208,6 +189,5 @@ module.exports = {
   focusWindow,
   restoreToWindow,
   recordFocusInfo,
-  restoreFocus,
   testFocusManager
 };

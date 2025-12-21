@@ -1,12 +1,12 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, ipcMain, nativeImage, clipboard } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, ipcMain, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
 // 导入键盘模拟模块
 const { sendTextToETX } = require('./keyboard.js');
-// 导入新的焦点管理模块
-const { recordFocusInfo, restoreFocus } = require('./focus-manager.js');
+// 导入焦点管理模块
+const { recordFocusInfo } = require('./focus-manager.js');
 
 // 保持对窗口对象的全局引用
 let inputWindow = null;
@@ -41,29 +41,7 @@ let inputHistory = [];
 // 焦点窗口记录
 let lastFocusedWindow = null;
 
-// 恢复焦点窗口
-function restoreFocusWindow() {
-  if (config.focusSwitchMethod === 'api' && lastFocusedWindow) {
-    try {
-      console.log('开始恢复焦点窗口...');
-      return restoreFocus(lastFocusedWindow).then(success => {
-        if (success) {
-          console.log('焦点窗口恢复成功');
-        } else {
-          console.log('焦点窗口恢复失败');
-        }
-        return success;
-      }).catch(error => {
-        console.error('恢复焦点窗口出错:', error);
-        return false;
-      });
-    } catch (error) {
-      console.error('恢复焦点窗口失败:', error);
-      return Promise.resolve(false);
-    }
-  }
-  return Promise.resolve(false);
-}
+
 
 // 加载配置
 function loadConfig() {
