@@ -1,10 +1,39 @@
 const { clipboard } = require('electron');
 const { keyboard, Key } = require('@nut-tree/nut-js');
+const { activateAndPasteByPID } = require('./activate_win.js');
 
 // 自动粘贴功能 - 使用优化的鼠标控制
 const { leftClick, middleClick } = require('./mouse-control.js');
 
-async function autoPaste(text, pasteMethod = 'middleClick') {
+// 激活窗口函数 - 仅在Windows平台使用
+async function activateCurrentWindow(processId) {
+  if (process.platform !== 'win32') {
+    console.log('非Windows平台，跳过窗口激活');
+    return true;
+  }
+
+  if (!processId) {
+    console.log('未提供目标窗口进程ID，跳过窗口激活');
+    return false;
+  }
+
+  try {
+    console.log('激活目标窗口，进程ID:', processId);
+    
+    // 直接调用activateAndPasteByPID函数
+    activateAndPasteByPID(processId);
+    
+    // 等待一段时间让激活操作完成
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return true;
+  } catch (error) {
+    console.error('激活窗口失败:', error);
+    return false;
+  }
+}
+
+async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessId = null) {
   try {
     console.log('开始自动粘贴流程，文本:', text, '方式:', pasteMethod);
     
@@ -37,8 +66,26 @@ async function autoPaste(text, pasteMethod = 'middleClick') {
     
     // 根据平台决定是否需要先左键点击
     try {
-      // macOS需要先左键点击切换窗口焦点，Windows不需要
-      if (process.platform === 'darwin') {
+      // Windows平台：先激活窗口，再进行粘贴
+      if (process.platform === 'win32') {
+        console.log('Windows平台，激活目标窗口');
+        
+        if (targetWindowProcessId) {
+          const activateSuccess = await activateCurrentWindow(targetWindowProcessId);
+          if (activateSuccess) {
+            console.log('目标窗口激活成功');
+          } else {
+            console.log('目标窗口激活失败，继续执行粘贴操作');
+          }
+        } else {
+          console.log('未提供目标窗口PID，跳过窗口激活');
+        }
+        
+        // 增加延迟确保窗口激活完成
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } 
+      // macOS需要先左键点击切换窗口焦点
+      else if (process.platform === 'darwin') {
         console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
         await leftClick();
         console.log('鼠标左键点击成功');
@@ -46,7 +93,7 @@ async function autoPaste(text, pasteMethod = 'middleClick') {
         // 增加延迟确保窗口焦点切换完成
         await new Promise(resolve => setTimeout(resolve, 200));
       } else {
-        console.log('Windows/Linux平台，跳过左键点击');
+        console.log('Linux平台，跳过窗口激活和左键点击');
       }
       
       // 根据选择的方式执行粘贴
@@ -102,4 +149,4 @@ async function autoPaste(text, pasteMethod = 'middleClick') {
   }
 }
 
-module.exports = { autoPaste };
+module.exports = { autoPaste, activateCurrentWindow };

@@ -2,6 +2,7 @@ const { app, BrowserWindow, globalShortcut, Tray, Menu, ipcMain, nativeImage, cl
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const activeWin = require('active-win');
 
 // 导入键盘模拟模块
 const { sendTextToETX } = require('./keyboard.js');
@@ -14,6 +15,9 @@ let isDev = process.argv.includes('--dev');
 
 // 存储上次鼠标位置
 let lastCursorPosition = null;
+
+// 存储目标窗口的进程ID（用于Windows平台激活窗口）
+let targetWindowProcessId = null;
 
 // 配置文件路径
 const configPath = path.join(os.homedir(), '.etxtool', 'config.json');
@@ -112,7 +116,21 @@ function addToHistory(text) {
 }
 
 // 创建输入窗口
-function createInputWindow() {
+async function createInputWindow() {
+  // 在Windows平台，显示输入窗口前先获取当前活动窗口的PID
+  if (process.platform === 'win32') {
+    try {
+      const activeWindow = await activeWin();
+      if (activeWindow && activeWindow.owner.processId) {
+        targetWindowProcessId = activeWindow.owner.processId;
+        console.log('保存目标窗口进程ID:', targetWindowProcessId);
+      }
+    } catch (error) {
+      console.error('获取目标窗口PID失败:', error);
+      targetWindowProcessId = null;
+    }
+  }
+
   if (inputWindow) {
     inputWindow.show();
     inputWindow.focus();
@@ -667,7 +685,7 @@ ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
       inputWindow.webContents.send('clear-input');
     }
 
-    await sendTextToETX(text, method, config.restoreClipboard);
+    await sendTextToETX(text, method, config.restoreClipboard, targetWindowProcessId);
     
     // 隐藏输入窗口
     if (inputWindow && !inputWindow.isDestroyed()) {
@@ -696,6 +714,8 @@ ipcMain.handle('hide-input-window', () => {
 ipcMain.handle('open-settings', () => {
   createSettingsWindow();
 });
+
+
 
 // 应用程序就绪时
 app.whenReady().then(() => {

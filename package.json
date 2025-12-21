@@ -23,6 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "@nut-tree/nut-js": "^3.1.2",
+    "active-win": "^8.2.1",
     "jimp": "^0.22.12",
     "vue": "^3.5.13"
   },
