@@ -1,6 +1,6 @@
 const { clipboard } = require('electron');
 const { keyboard, Key } = require('@nut-tree/nut-js');
-const { activateAndPasteByPID } = require('./activate_win.js');
+const { activateWindowByPID } = require('./activate_win.js');
 
 // 自动粘贴功能 - 使用优化的鼠标控制
 const { leftClick, middleClick } = require('./mouse-control.js');
@@ -20,11 +20,11 @@ async function activateCurrentWindow(processId) {
   try {
     console.log('激活目标窗口，进程ID:', processId);
     
-    // 直接调用activateAndPasteByPID函数
-    activateAndPasteByPID(processId);
+    // 直接调用activateWindowByPID函数
+    activateWindowByPID(processId);
     
     // 等待一段时间让激活操作完成
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     return true;
   } catch (error) {

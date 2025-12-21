@@ -1,35 +1,35 @@
 const { exec } = require('child_process');
+const os = require('os');
 
 /**
- * 通过 PID 激活窗口并执行粘贴
+ * 跨平台通过 PID 激活窗口
  * @param {number|string} pid 进程 ID
  */
-function activateAndPasteByPID(pid) {
-    // 构建 PowerShell 命令
-    // 注意：在 JS 字符串中，^ 符号不需要特殊转义，但整个命令需要包裹在引号内
-    const psCommand = `powershell -Command "$ws = New-Object -ComObject WScript.Shell; if($ws.AppActivate(${pid})){ Start-Sleep -Milliseconds 500; $ws.SendKeys('^v') }"`;
+function activateWindowByPID(pid) {
+    const platform = os.platform();
+    let command = '';
 
-    exec(psCommand, (error, stdout, stderr) => {
+    if (platform === 'win32') {
+        // Windows: 使用 PowerShell 激活指定 PID 窗口
+        command = `powershell -Command "(New-Object -ComObject WScript.Shell).AppActivate(${pid})"`;
+    } 
+    else if (platform === 'darwin') {
+        // macOS: 使用 AppleScript 将指定 PID 的进程设为最前
+        command = `osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is ${pid} to true'`;
+    } 
+    else {
+        console.error(`不支持的平台: ${platform}`);
+        return;
+    }
+
+    exec(command, (error) => {
         if (error) {
-            console.error(`执行出错: ${error.message}`);
+            console.error(`激活失败: ${error.message}`);
             return;
         }
-        if (stderr) {
-            console.error(`标准错误输出: ${stderr}`);
-            return;
-        }
-        console.log(`成功指令已发送至 PID: ${pid}`);
+        console.log(`已尝试聚焦 PID 为 ${pid} 的窗口 (${platform})`);
     });
 }
 
-// 从命令行获取 PID 参数：node activate-paste.js 15332
-// const targetPID = process.argv[2];
-
-// if (!targetPID) {
-//     console.log("用法: node activate-paste.js <PID>");
-// } else {
-//     activateAndPasteByPID(targetPID);
-// }
-
 // 导出函数供其他模块使用
-module.exports = { activateAndPasteByPID };
+module.exports = { activateWindowByPID };
