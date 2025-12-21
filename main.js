@@ -25,7 +25,9 @@ let config = {
   opacity: 80,
   theme: 'light',
   windowHeight: 120,
-  windowWidth: 600
+  windowWidth: 600,
+  pasteMethod: 'ctrlShiftV', // 默认使用Ctrl+Shift+V粘贴
+  restoreClipboard: false // 默认不恢复剪贴板
 };
 
 // 历史记录配置
@@ -648,9 +650,12 @@ ipcMain.handle('save-config', (event, newConfig) => {
   return config;
 });
 
-ipcMain.handle('send-text', async (event, text) => {
+ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
   // 实现发送文本到ETX的功能
-  console.log('发送文本:', text);
+  console.log('发送文本:', text, '粘贴方式:', pasteMethod || config.pasteMethod);
+  
+  // 如果没有传入粘贴方式参数，则使用配置中的默认值
+  const method = pasteMethod || config.pasteMethod;
   
   try {
     // 添加到历史记录
@@ -662,7 +667,7 @@ ipcMain.handle('send-text', async (event, text) => {
       inputWindow.webContents.send('clear-input');
     }
 
-    await sendTextToETX(text);
+    await sendTextToETX(text, method, config.restoreClipboard);
     
     // 隐藏输入窗口
     if (inputWindow && !inputWindow.isDestroyed()) {

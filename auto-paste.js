@@ -1,11 +1,12 @@
 const { clipboard } = require('electron');
+const { keyboard, Key } = require('@nut-tree/nut-js');
 
 // 自动粘贴功能 - 使用优化的鼠标控制
 const { leftClick, middleClick } = require('./mouse-control.js');
 
-async function autoPaste(text) {
+async function autoPaste(text, pasteMethod = 'middleClick') {
   try {
-    console.log('开始自动粘贴流程，文本:', text);
+    console.log('开始自动粘贴流程，文本:', text, '方式:', pasteMethod);
     
     // 确保文本在剪贴板中 - 直接写入，不验证
     const { clipboard } = require('electron');
@@ -48,10 +49,43 @@ async function autoPaste(text) {
         console.log('Windows/Linux平台，跳过左键点击');
       }
       
-      // 执行鼠标中键点击进行粘贴
-      console.log('执行鼠标中键点击');
-      await middleClick();
-      console.log('鼠标中键点击成功');
+      // 根据选择的方式执行粘贴
+      switch (pasteMethod) {
+        case 'middleClick':
+          // 执行鼠标中键点击进行粘贴
+          console.log('执行鼠标中键点击');
+          await middleClick();
+          console.log('鼠标中键点击成功');
+          break;
+          
+        case 'ctrlV':
+          // 执行 Ctrl+V 粘贴
+          console.log('执行 Ctrl+V 粘贴');
+          await keyboard.pressKey(Key.LeftControl);
+          await keyboard.pressKey(Key.V);
+          await keyboard.releaseKey(Key.V);
+          await keyboard.releaseKey(Key.LeftControl);
+          console.log('Ctrl+V 粘贴成功');
+          break;
+          
+        case 'ctrlShiftV':
+          // 执行 Ctrl+Shift+V 粘贴
+          console.log('执行 Ctrl+Shift+V 粘贴');
+          await keyboard.pressKey(Key.LeftControl);
+          await keyboard.pressKey(Key.LeftShift);
+          await keyboard.pressKey(Key.V);
+          await keyboard.releaseKey(Key.V);
+          await keyboard.releaseKey(Key.LeftShift);
+          await keyboard.releaseKey(Key.LeftControl);
+          console.log('Ctrl+Shift+V 粘贴成功');
+          break;
+          
+        default:
+          // 默认使用鼠标中键
+          console.log('执行默认鼠标中键点击');
+          await middleClick();
+          console.log('鼠标中键点击成功');
+      }
       
       // 再次验证剪贴板内容，确保没有在粘贴过程中被改变
       const afterPasteClipboard = clipboard.readText();
@@ -59,7 +93,7 @@ async function autoPaste(text) {
       
       return true;
     } catch (error) {
-      console.error('鼠标点击失败:', error);
+      console.error('粘贴操作失败:', error);
       return false;
     }
   } catch (error) {
