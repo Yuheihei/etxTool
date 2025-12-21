@@ -1,6 +1,7 @@
 // 键盘模拟模块
 const { exec } = require('child_process');
 const path = require('path');
+const { app } = require('electron');
 
 // 检查是否包含中文字符
 function containsChinese(text) {
@@ -15,7 +16,9 @@ async function sendTextToETX(text, config = {}) {
     
     // 如果使用API切换方式且有焦点窗口信息，直接调用PowerShell脚本
     if (config.focusSwitchMethod === 'api' && config.lastFocusedWindow) {
-      const scriptPath = path.join(__dirname, 'activatewin.ps1');
+      // 使用app.getAppPath()获取应用路径，确保在打包后能正确找到脚本
+      const appPath = app.getAppPath();
+      const scriptPath = path.join(appPath, 'activatewin.ps1');
       
       // 根据粘贴选项映射到PowerShell脚本的PasteMethod参数
       // 1: Ctrl+V, 2: Ctrl+Shift+V, 3: 鼠标中键(Shift+Insert)
@@ -34,16 +37,21 @@ async function sendTextToETX(text, config = {}) {
       const fullCommand = `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}" -Base64Title "${b64Title}" -Base64Text "${b64Text}" -PasteMethod ${pasteMethodCode}`;
 
       return new Promise((resolve, reject) => {
+        console.log('执行PowerShell命令:', fullCommand);
+        console.log('脚本路径:', scriptPath);
+        
         exec(fullCommand, (error, stdout, stderr) => {
           if (error) {
-            console.error('执行失败:', error);
+            console.error('PowerShell执行失败:', error);
+            console.error('错误代码:', error.code);
+            console.error('错误信号:', error.signal);
             resolve(false);
             return;
           }
           if (stderr) {
-            console.error('PowerShell脚本错误:', stderr);
+            console.error('PowerShell脚本错误输出:', stderr);
           }
-          console.log('结果:', stdout.trim());
+          console.log('PowerShell脚本成功执行，输出:', stdout.trim());
           resolve(true);
         });
       });
