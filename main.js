@@ -41,6 +41,35 @@ let inputHistory = [];
 // 焦点窗口记录
 let lastFocusedWindow = null;
 
+// 切换开发面板
+function toggleDevTools() {
+  // 优先打开输入窗口的开发面板
+  if (inputWindow && !inputWindow.isDestroyed()) {
+    if (inputWindow.webContents.isDevToolsOpened()) {
+      inputWindow.webContents.closeDevTools();
+      console.log('输入窗口开发面板已关闭');
+    } else {
+      inputWindow.webContents.openDevTools();
+      console.log('输入窗口开发面板已打开');
+    }
+    return;
+  }
+  
+  // 如果输入窗口不存在，尝试打开设置窗口的开发面板
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    if (settingsWindow.webContents.isDevToolsOpened()) {
+      settingsWindow.webContents.closeDevTools();
+      console.log('设置窗口开发面板已关闭');
+    } else {
+      settingsWindow.webContents.openDevTools();
+      console.log('设置窗口开发面板已打开');
+    }
+    return;
+  }
+  
+  console.log('没有可用的窗口打开开发面板');
+}
+
 
 
 // 加载配置
@@ -514,6 +543,13 @@ function createTray() {
       },
       { type: 'separator' },
       {
+        label: '开发面板 (F12)',
+        click: () => {
+          toggleDevTools();
+        }
+      },
+      { type: 'separator' },
+      {
         label: '退出',
         click: () => {
           app.quit();
@@ -534,10 +570,16 @@ function createTray() {
     });
     
     tray.on('right-click', (event, bounds) => {
-      console.log('托盘右键点击');
-      // 在某些情况下手动弹出菜单
-      if (process.platform !== 'win32') {
+      console.log('托盘右键点击，平台:', process.platform);
+      console.log('事件对象:', event);
+      console.log('边界信息:', bounds);
+      
+      // Windows平台也尝试手动弹出菜单作为备选方案
+      try {
         tray.popUpContextMenu(contextMenu);
+        console.log('手动弹出右键菜单成功');
+      } catch (error) {
+        console.error('手动弹出右键菜单失败:', error);
       }
     });
     
@@ -566,6 +608,13 @@ function updateTrayMenu() {
         label: '设置',
         click: () => {
           createSettingsWindow();
+        }
+      },
+      { type: 'separator' },
+      {
+        label: '开发面板 (F12)',
+        click: () => {
+          toggleDevTools();
         }
       },
       { type: 'separator' },
@@ -641,10 +690,22 @@ function registerGlobalShortcut() {
     createInputWindow();
   });
 
+  // 注册开发面板快捷键（F12）
+  const devRet = globalShortcut.register('F12', () => {
+    console.log('开发面板快捷键被触发');
+    toggleDevTools();
+  });
+
   if (!ret) {
     console.error('快捷键注册失败');
   } else {
     console.log(`快捷键 ${config.hotkey} 注册成功`);
+  }
+
+  if (!devRet) {
+    console.error('开发面板快捷键注册失败');
+  } else {
+    console.log('开发面板快捷键 F12 注册成功');
   }
 }
 

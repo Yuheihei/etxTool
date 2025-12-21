@@ -33,23 +33,49 @@ async function sendTextToETX(text, config = {}) {
       const b64Title = Buffer.from(config.lastFocusedWindow.title, 'utf16le').toString('base64');
       const b64Text = Buffer.from(text, 'utf16le').toString('base64');
 
-      // 构造命令
+      // 构造命令，增加执行策略和调试信息
       const fullCommand = `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}" -Base64Title "${b64Title}" -Base64Text "${b64Text}" -PasteMethod ${pasteMethodCode}`;
 
       return new Promise((resolve, reject) => {
-        console.log('执行PowerShell命令:', fullCommand);
+        console.log('=== PowerShell调试信息 ===');
+        console.log('应用路径:', appPath);
         console.log('脚本路径:', scriptPath);
+        console.log('脚本是否存在:', require('fs').existsSync(scriptPath));
+        console.log('执行命令:', fullCommand);
+        console.log('========================');
         
-        exec(fullCommand, (error, stdout, stderr) => {
+        exec(fullCommand, { timeout: 10000 }, (error, stdout, stderr) => {
           if (error) {
-            console.error('PowerShell执行失败:', error);
+            console.error('=== PowerShell执行失败 ===');
+            console.error('错误信息:', error.message);
             console.error('错误代码:', error.code);
             console.error('错误信号:', error.signal);
-            resolve(false);
+            console.error('标准错误:', stderr);
+            console.error('标准输出:', stdout);
+            console.error('========================');
+            
+            // 尝试备选方案：使用更宽松的执行策略
+            if (error.code === 1 && stderr.includes('execution')) {
+              console.log('尝试使用备选执行策略...');
+              const fallbackCommand = `powershell.exe -NoProfile -ExecutionPolicy Unrestricted -File "${scriptPath}" -Base64Title "${b64Title}" -Base64Text "${b64Text}" -PasteMethod ${pasteMethodCode}`;
+              
+              exec(fallbackCommand, { timeout: 10000 }, (fallbackError, fallbackStdout, fallbackStderr) => {
+                if (fallbackError) {
+                  console.error('备选方案也失败:', fallbackError);
+                  resolve(false);
+                } else {
+                  console.log('备选方案成功:', fallbackStdout.trim());
+                  resolve(true);
+                }
+              });
+            } else {
+              resolve(false);
+            }
             return;
           }
+          
           if (stderr) {
-            console.error('PowerShell脚本错误输出:', stderr);
+            console.warn('PowerShell脚本警告:', stderr);
           }
           console.log('PowerShell脚本成功执行，输出:', stdout.trim());
           resolve(true);

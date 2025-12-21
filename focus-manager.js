@@ -56,8 +56,12 @@ async function focusWindow(targetTitle) {
     
     if (platform === 'win32') {
       // Windows: 使用activatewin.ps1脚本
-      const scriptPath = path.join(__dirname, 'activatewin.ps1');
+      // 在打包环境中使用app.getAppPath()获取正确的应用路径
+      const app = require('electron').app || { getAppPath: () => __dirname };
+      const scriptPath = path.join(app.getAppPath(), 'activatewin.ps1');
       const psCommand = `& "${scriptPath}" -WindowTitle "${targetTitle}"`;
+      console.log(`[${new Date().toISOString()}] 应用路径: ${app.getAppPath()}`);
+      console.log(`[${new Date().toISOString()}] 脚本路径: ${scriptPath}`);
       console.log(`[${new Date().toISOString()}] 执行PowerShell脚本: ${psCommand}`);
       
       const { stdout, stderr } = await execAsync(`powershell -Command "${psCommand}"`);
