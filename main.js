@@ -132,8 +132,8 @@ async function createInputWindow() {
   }
 
   if (inputWindow) {
-    inputWindow.show();
-    inputWindow.focus();
+    // inputWindow.show();
+    // inputWindow.focus();
     // 重新定位到鼠标位置
     setTimeout(() => {
       positionWindowAtCursor();
@@ -209,7 +209,7 @@ async function createInputWindow() {
   // 窗口准备好后定位到鼠标位置
   inputWindow.once('ready-to-show', () => {
     // 先显示窗口，然后定位
-    inputWindow.show();
+    // inputWindow.show();
     
     // macOS特殊处理：立即设置窗口层级但不遮挡输入法
     if (process.platform === 'darwin') {
@@ -301,33 +301,6 @@ function positionWindowAtCursor() {
       cursorPosition = { x: width / 2, y: height / 2 };
     }
     
-    // 检查鼠标位置变化是否超过50像素
-    if (lastCursorPosition) {
-      const deltaX = Math.abs(cursorPosition.x - lastCursorPosition.x);
-      const deltaY = Math.abs(cursorPosition.y - lastCursorPosition.y);
-      
-      if (deltaX <= 50 && deltaY <= 50) {
-        console.log('鼠标位置变化不大，跳过重新定位');
-        // 仍然需要确保窗口显示和聚焦
-        if (!inputWindow.isVisible()) {
-          inputWindow.show();
-        }
-        setTimeout(() => {
-          if (inputWindow && !inputWindow.isDestroyed()) {
-            inputWindow.focus();
-            if (process.platform === 'darwin') {
-              inputWindow.moveTop();
-            }
-          }
-        }, 10);
-        return;
-      }
-    }
-    
-    // 更新上次鼠标位置
-    lastCursorPosition = { x: cursorPosition.x, y: cursorPosition.y };
-    console.log('鼠标位置变化较大，重新定位窗口');
-    
     // macOS特殊处理：获取当前活动的屏幕
     let currentScreen;
     if (process.platform === 'darwin') {
@@ -395,6 +368,7 @@ function positionWindowAtCursor() {
     // 确保窗口显示并聚焦
     if (!inputWindow.isVisible()) {
       inputWindow.show();
+      inputWindow.focus();
     }
     
     // 确保窗口聚焦但不改变位置
@@ -415,24 +389,6 @@ function positionWindowAtCursor() {
     }
   } catch (error) {
     console.error('定位窗口失败:', error);
-    // 如果定位失败，使用屏幕中心
-    const { screen } = require('electron');
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
-    const windowBounds = inputWindow.getBounds();
-    
-    // macOS特殊处理：为输入法候选框预留空间
-    let y = Math.floor((screenHeight - windowBounds.height) / 2);
-    if (process.platform === 'darwin') {
-      y -= 75; // 向上偏移，为输入法候选框留空间
-    }
-    
-    inputWindow.setPosition(
-      Math.floor((screenWidth - windowBounds.width) / 2),
-      Math.max(y, 10) // 确保不超出屏幕上边界
-    );
-    inputWindow.show();
-    inputWindow.focus();
   }
 }
 
@@ -688,9 +644,9 @@ ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
     await sendTextToETX(text, method, config.restoreClipboard, targetWindowProcessId);
     
     // 隐藏输入窗口
-    if (inputWindow && !inputWindow.isDestroyed()) {
-      inputWindow.hide();
-    }
+    // if (inputWindow && !inputWindow.isDestroyed()) {
+    //   inputWindow.hide();
+    // }
   } catch (error) {
     console.error('发送文本失败:', error);
   }
