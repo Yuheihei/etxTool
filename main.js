@@ -14,7 +14,6 @@ let tray = null;
 let isDev = process.argv.includes('--dev');
 
 // 存储上次鼠标位置
-let lastCursorPosition = null;
 
 // 存储目标窗口的进程ID（用于Windows平台激活窗口）
 let targetWindowProcessId = null;
@@ -137,11 +136,12 @@ async function createInputWindow() {
   setTimeout(() => {
     if (inputWindow && !inputWindow.isDestroyed()) {
       console.log('输入窗口已存在，显示并聚焦');
-      inputWindow.show();
+      inputWindow.setOpacity(Math.max(config.opacity / 100, 0.5));
+      inputWindow.setIgnoreMouseEvents(false);
       inputWindow.focus();
       inputWindow.webContents.send('history-reload');
     }
-  }, 100);
+  }, 50);
     
     return;
   }
@@ -190,16 +190,17 @@ async function createInputWindow() {
   });
 
   // 窗口失焦时隐藏（除了macOS，因为macOS有不同的窗口行为）
-  if (process.platform !== 'darwin') {
-    // 窗口失焦时隐藏（除了macOS，因为macOS有不同的窗口行为）
-    if (process.platform !== 'darwin') {
-      inputWindow.on('blur', () => {
-        if (inputWindow && !inputWindow.isDestroyed()) {
-          inputWindow.hide();
-        }
-      });
-    }
-  }
+  // if (process.platform !== 'darwin') {
+  //   // 窗口失焦时隐藏（除了macOS，因为macOS有不同的窗口行为）
+  //   if (process.platform !== 'darwin') {
+  //     inputWindow.on('blur', () => {
+  //       if (inputWindow && !inputWindow.isDestroyed()) {
+  //         inputWindow.setOpacity(0);
+  //         inputWindow.setIgnoreMouseEvents(true);
+  //       }
+  //     });
+  //   }
+  // }
 
   // 窗口准备好后定位到鼠标位置
   inputWindow.once('ready-to-show', () => {
@@ -597,16 +598,21 @@ ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
     
     // 通知渲染进程重新加载历史记录
     if (inputWindow && !inputWindow.isDestroyed()) {
-      inputWindow.webContents.send('history-reload');
       inputWindow.webContents.send('clear-input');
+      inputWindow.webContents.send('history-reload');
     }
 
+    if (inputWindow && !inputWindow.isDestroyed()) {
+      inputWindow.setOpacity(0);
+      inputWindow.setIgnoreMouseEvents(true);
+    }
+
+
     await sendTextToETX(text, method, config.restoreClipboard, targetWindowProcessId);
+
     
     // 隐藏输入窗口
-    if (inputWindow && !inputWindow.isDestroyed()) {
-      inputWindow.hide();
-    }
+    
   } catch (error) {
     console.error('发送文本失败:', error);
   }
@@ -623,7 +629,8 @@ ipcMain.handle('add-to-history', (event, text) => {
 
 ipcMain.handle('hide-input-window', () => {
   if (inputWindow && !inputWindow.isDestroyed()) {
-    inputWindow.hide();
+    inputWindow.setOpacity(0);
+inputWindow.setIgnoreMouseEvents(true);
   }
 });
 
