@@ -132,22 +132,16 @@ async function createInputWindow() {
   }
 
   if (inputWindow) {
-    // inputWindow.show();
-    // inputWindow.focus();
-    // 重新定位到鼠标位置
-    setTimeout(() => {
-      positionWindowAtCursor();
-    }, 50);
-    
-    // 重新加载历史记录以确保最新数据
-    loadHistory();
-    
-    // 通知前端重新加载历史记录
-    setTimeout(() => {
-      if (inputWindow && !inputWindow.isDestroyed()) {
-        inputWindow.webContents.send('history-reload');
-      }
-    }, 100);
+    positionWindowAtCursor();
+  // 延迟一丁点时间再显示，给 OS 响应坐标变更的时间
+  setTimeout(() => {
+    if (inputWindow && !inputWindow.isDestroyed()) {
+      console.log('输入窗口已存在，显示并聚焦');
+      inputWindow.show();
+      inputWindow.focus();
+      inputWindow.webContents.send('history-reload');
+    }
+  }, 100);
     
     return;
   }
@@ -158,6 +152,7 @@ async function createInputWindow() {
     height: parseInt(config.windowHeight) || 120,
     alwaysOnTop: true,
     skipTaskbar: true,
+    animate: false,
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
@@ -210,20 +205,16 @@ async function createInputWindow() {
   inputWindow.once('ready-to-show', () => {
     // 先显示窗口，然后定位
     // inputWindow.show();
-    
+    positionWindowAtCursor();
     // macOS特殊处理：立即设置窗口层级但不遮挡输入法
     if (process.platform === 'darwin') {
       inputWindow.setAlwaysOnTop(true, 'floating');
     }
-    
-    // 通知前端重新加载历史记录
-    setTimeout(() => {
-      inputWindow.webContents.send('history-reload');
-    }, 50);
-    
-    setTimeout(() => {
-      positionWindowAtCursor();
-    }, 100); // 延迟100ms确保窗口完全准备好
+   
+    // setTimeout(() => {
+    //   inputWindow.show();
+    //   inputWindow.webContents.send('history-reload');
+    // }, 100); // 延迟100ms确保窗口完全准备好
   });
 }
 
@@ -275,50 +266,19 @@ function positionWindowAtCursor() {
   if (!inputWindow || inputWindow.isDestroyed()) return;
   
   try {
-    const { screen } = require('electron');
     
-    // macOS特殊处理：确保窗口在全屏应用上方显示但不遮挡输入法
-    if (process.platform === 'darwin') {
-      // 设置窗口为浮动层级，避免遮挡输入法候选栏
-      inputWindow.setAlwaysOnTop(true, 'floating');
-    }
+      const { screen } = require('electron');
+      const cursorPosition = screen.getCursorScreenPoint();
+      const currentScreen = screen.getDisplayNearestPoint(cursorPosition);
+      const { width, height } = inputWindow.getBounds();
+      const { workArea } = currentScreen;
     
-    // 确保窗口完全准备好并显示
-    if (!inputWindow.isVisible()) {
-      inputWindow.show();
-    }
-    
-    // 获取鼠标位置
-    let cursorPosition;
-    try {
-      cursorPosition = screen.getCursorScreenPoint();
-      console.log('获取到鼠标位置:', cursorPosition);
-    } catch (e) {
-      console.error('无法获取鼠标位置:', e);
-      // 如果无法获取鼠标位置，使用屏幕中心
-      const primaryDisplay = screen.getPrimaryDisplay();
-      const { width, height } = primaryDisplay.workAreaSize;
-      cursorPosition = { x: width / 2, y: height / 2 };
-    }
-    
-    // macOS特殊处理：获取当前活动的屏幕
-    let currentScreen;
-    if (process.platform === 'darwin') {
-      // 在macOS上，获取鼠标所在的屏幕
-      currentScreen = screen.getDisplayNearestPoint(cursorPosition);
-    } else {
-      currentScreen = screen.getDisplayNearestPoint(cursorPosition);
-    }
-    
-    const windowBounds = inputWindow.getBounds();
-    const { width, height } = windowBounds;
     
     // 计算窗口位置（优先显示在鼠标右下方）
     let x = cursorPosition.x + 20;
     let y = cursorPosition.y + 20;
     
     // 确保窗口不超出屏幕边界
-    const { workArea } = currentScreen;
     console.log('屏幕工作区域:', workArea);
     
     // macOS特殊处理：为输入法候选框预留空间
@@ -359,34 +319,34 @@ function positionWindowAtCursor() {
     // 设置窗口位置并确保窗口可见
     inputWindow.setPosition(Math.floor(x), Math.floor(y), false);
     
-    // macOS特殊处理：确保窗口在最前面但不遮挡输入法
-    if (process.platform === 'darwin') {
-      // 设置窗口层级，避免遮挡输入法候选栏
-      inputWindow.setAlwaysOnTop(true, 'floating');
-    }
+    // // macOS特殊处理：确保窗口在最前面但不遮挡输入法
+    // if (process.platform === 'darwin') {
+    //   // 设置窗口层级，避免遮挡输入法候选栏
+    //   inputWindow.setAlwaysOnTop(true, 'floating');
+    // }
     
-    // 确保窗口显示并聚焦
-    if (!inputWindow.isVisible()) {
-      inputWindow.show();
-      inputWindow.focus();
-    }
+    // // 确保窗口显示并聚焦
+    // if (!inputWindow.isVisible()) {
+    //   inputWindow.show();
+    //   inputWindow.focus();
+    // }
     
-    // 确保窗口聚焦但不改变位置
-    setTimeout(() => {
-      if (inputWindow && !inputWindow.isDestroyed()) {
-        inputWindow.focus();
-        // macOS上再次确保窗口层级正确但不遮挡输入法
-        if (process.platform === 'darwin') {
-          inputWindow.setAlwaysOnTop(true, 'floating');
-        }
-      }
-    }, 10);
+    // // 确保窗口聚焦但不改变位置
+    // setTimeout(() => {
+    //   if (inputWindow && !inputWindow.isDestroyed()) {
+    //     inputWindow.focus();
+    //     // macOS上再次确保窗口层级正确但不遮挡输入法
+    //     if (process.platform === 'darwin') {
+    //       inputWindow.setAlwaysOnTop(true, 'floating');
+    //     }
+    //   }
+    // }, 10);
     
-    console.log(`窗口定位到: ${Math.floor(x)}, ${Math.floor(y)}`);
-    console.log(`窗口大小: ${width}x${height}`);
-    if (process.platform === 'darwin') {
-      console.log(`为输入法候选框预留了 ${imeCandidateHeight} 像素高度`);
-    }
+    // console.log(`窗口定位到: ${Math.floor(x)}, ${Math.floor(y)}`);
+    // console.log(`窗口大小: ${width}x${height}`);
+    // if (process.platform === 'darwin') {
+    //   console.log(`为输入法候选框预留了 ${imeCandidateHeight} 像素高度`);
+    // }
   } catch (error) {
     console.error('定位窗口失败:', error);
   }
@@ -644,9 +604,9 @@ ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
     await sendTextToETX(text, method, config.restoreClipboard, targetWindowProcessId);
     
     // 隐藏输入窗口
-    // if (inputWindow && !inputWindow.isDestroyed()) {
-    //   inputWindow.hide();
-    // }
+    if (inputWindow && !inputWindow.isDestroyed()) {
+      inputWindow.hide();
+    }
   } catch (error) {
     console.error('发送文本失败:', error);
   }
