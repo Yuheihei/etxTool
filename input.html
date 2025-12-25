@@ -14,10 +14,13 @@
 
         /* 浅色主题 */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+            font-family: 'PingFang SC', 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', 'Source Han Sans CN', '思源黑体', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+            background-blend-mode: overlay;
             color: #1a1a1a;
-            border-radius: 16px;
+            border-radius: 0;
             box-shadow:
                 0 20px 40px rgba(0, 0, 0, 0.1),
                 0 8px 16px rgba(0, 0, 0, 0.08),
@@ -26,27 +29,32 @@
             user-select: none;
             backdrop-filter: blur(20px);
             margin: 0;
+            padding: 0;
             width: 100vw;
             height: 100vh;
         }
 
         /* 深色主题 */
         body.dark-theme {
-            background: linear-gradient(135deg, rgba(30, 30, 30, 0.98) 0%, rgba(45, 45, 45, 0.98) 100%);
+            background:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+                linear-gradient(135deg, rgba(30, 30, 30, 0.98) 0%, rgba(45, 45, 45, 0.98) 100%);
+            background-blend-mode: overlay;
             color: #f0f0f0;
             box-shadow:
                 0 20px 40px rgba(0, 0, 0, 0.4),
                 0 8px 16px rgba(0, 0, 0, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            padding: 0;
         }
 
         html {
-            border-radius: 16px;
+            border-radius: 0;
             overflow: hidden;
         }
 
         #app {
-            padding: 6px;
+            padding: 4px;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -61,19 +69,21 @@
 
         .input-field {
             flex: 1;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 12px;
-            padding: 8px 10px;
+            border: 2px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0;
+            padding: 4px 10px;
             font-size: 16px;
-            line-height: 1.6;
+            line-height: 1.5;
             resize: none;
             outline: none;
             background: rgba(255, 255, 255, 0.8);
             color: #1a1a1a;
+            font-family: 'PingFang SC', 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', 'Source Han Sans CN', '思源黑体', -apple-system, BlinkMacSystemFont, sans-serif;
             box-shadow:
                 0 4px 12px rgba(0, 0, 0, 0.05) inset,
                 0 1px 2px rgba(0, 0, 0, 0.03);
             font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .input-field:focus {
@@ -99,6 +109,7 @@
             box-shadow:
                 0 4px 12px rgba(0, 0, 0, 0.3) inset,
                 0 1px 2px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body.dark-theme .input-field:focus {
@@ -118,25 +129,94 @@
         /* 粘贴方式选择框 */
         .paste-method-selector {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            bottom: 6px;
+            right: 6px;
             z-index: 10;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.75);
             border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 4px 6px;
-            font-size: 12px;
+            border-radius: 0;
+            padding: 3px 4px;
+            font-size: 11px;
             color: #333;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             outline: none;
+            line-height: 1.4;
         }
-        
+
         body.dark-theme .paste-method-selector {
-            background: rgba(60, 60, 60, 0.9);
+            background: rgba(60, 60, 60, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #f0f0f0;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 复制按钮 */
+        .copy-button {
+            position: absolute;
+            bottom: 6px;
+            right: 110px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 0;
+            padding: 3px 6px;
+            font-size: 11px;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            outline: none;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .copy-button:active {
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(0.98);
+        }
+
+        body.dark-theme .copy-button {
+            background: rgba(60, 60, 60, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-theme .copy-button:hover {
+            background: rgba(70, 70, 80, 0.85);
+            border-color: rgba(96, 165, 250, 0.4);
+        }
+
+        /* 复制成功提示 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        body.dark-theme .toast {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1a1a1a;
         }
         
         .paste-method-selector:focus {
@@ -159,8 +239,13 @@
                 placeholder="输入内容后，按回车发送 | Ctrl+↑↓ 浏览历史记录"
                 autofocus
             ></textarea>
-            <select 
-                class="paste-method-selector" 
+            <button
+                class="copy-button"
+                @click="copyToClipboard"
+                title="复制到剪贴板"
+            >复制</button>
+            <select
+                class="paste-method-selector"
                 v-model="selectedPasteMethod"
                 @change="savePasteMethodPreference"
                 ref="pasteMethodSelector"
@@ -170,6 +255,7 @@
                 <option value="ctrlShiftV">Ctrl+Shift+V</option>
             </select>
         </div>
+        <div class="toast" :class="{ show: showToast }">复制成功</div>
     </div>
 
     <script>
@@ -183,7 +269,8 @@
                     history: [],
                     historyIndex: -1,
                     tempInputText: '', // 保存用户当前输入的内容
-                    selectedPasteMethod: 'ctrlShiftV' // 默认粘贴方式
+                    selectedPasteMethod: 'ctrlShiftV', // 默认粘贴方式
+                    showToast: false // 控制提示显示
                 };
             },
             async mounted() {
@@ -355,6 +442,22 @@
 
                 closeWindow() {
                     window.electronAPI.hideInputWindow();
+                },
+
+                async copyToClipboard() {
+                    if (this.inputText.trim()) {
+                        try {
+                            await navigator.clipboard.writeText(this.inputText.trim());
+                            console.log('已复制到剪贴板:', this.inputText.trim());
+                            // 显示提示
+                            this.showToast = true;
+                            setTimeout(() => {
+                                this.showToast = false;
+                            }, 1000);
+                        } catch (error) {
+                            console.error('复制失败:', error);
+                        }
+                    }
                 }
             }
         }).mount('#app');
