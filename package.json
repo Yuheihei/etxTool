@@ -25,11 +25,8 @@
     "@nut-tree/nut-js": "^3.1.2",
     "active-win": "^8.2.1",
     "jimp": "^0.22.12",
+    "koffi": "^2.15.0",
     "vue": "^3.5.13"
-  },
-  "devDependencies": {
-    "electron": "^33.2.1",
-    "electron-builder": "^25.1.8"
   },
   "devDependencies": {
     "electron": "^33.2.1",
@@ -42,15 +39,10 @@
       "output": "dist"
     },
     "files": [
-      "main.js",
-      "preload.js",
-      "input.html",
-      "settings.html",
+      "*.html",
+      "*.js",
       "icon.png",
-      "activatewin.ps1",
       "activatewin.scpt",
-      "focus-manager.js",
-      "keyboard.js",
       "node_modules/**/*",
       "package.json"
     ],

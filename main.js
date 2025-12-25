@@ -3,11 +3,10 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const activeWin = require('active-win');
+const koffi = require('koffi');
 
 // 导入键盘模拟模块
 const { sendTextToETX } = require('./keyboard.js');
-// 导入焦点管理模块
-const { recordFocusInfo } = require('./focus-manager.js');
 
 // 保持对窗口对象的全局引用
 let inputWindow = null;
@@ -17,8 +16,8 @@ let isDev = process.argv.includes('--dev');
 
 // 存储上次鼠标位置
 
-// 存储目标窗口的进程ID（用于Windows平台激活窗口）
-let targetWindowProcessId = null;
+// 存储目标窗口的句柄（用于Windows平台激活窗口）
+let targetWindowHandle = null;
 
 // 配置文件路径
 const configPath = path.join(os.homedir(), '.etxtool', 'config.json');
@@ -152,17 +151,35 @@ function addToHistory(text) {
 
 // 创建输入窗口
 async function createInputWindow() {
-  // 在Windows平台，显示输入窗口前先获取当前活动窗口的PID
+  // 在Windows平台，显示输入窗口前先获取当前活动窗口的句柄
   if (process.platform === 'win32') {
     try {
       const activeWindow = await activeWin();
       if (activeWindow && activeWindow.owner.processId) {
-        targetWindowProcessId = activeWindow.owner.processId;
-        console.log('Saved target window PID:', targetWindowProcessId);
+        // 使用 koffi 通过 PID 获取窗口句柄
+        const user32 = koffi.load('user32.dll');
+        const GetForegroundWindow = user32.func('intptr_t GetForegroundWindow()');
+        const GetWindowThreadProcessId = user32.func('uint32_t GetWindowThreadProcessId(intptr_t hWnd, uintptr_t* lpdwProcessId)');
+
+        // 获取当前前景窗口句柄
+        const hwnd = GetForegroundWindow();
+
+        // 验证这个窗口是否属于目标进程
+        const processIdPtr = Buffer.alloc(8);
+        GetWindowThreadProcessId(hwnd, processIdPtr);
+        const windowProcessId = processIdPtr.readUInt32LE();
+
+        if (windowProcessId === activeWindow.owner.processId) {
+          targetWindowHandle = hwnd;
+          console.log('Saved target window handle:', targetWindowHandle);
+        } else {
+          console.warn('Foreground window PID mismatch, trying to enumerate...');
+          targetWindowHandle = null;
+        }
       }
     } catch (error) {
-      console.error('Failed to get target window PID:', error);
-      targetWindowProcessId = null;
+      console.error('Failed to get target window handle:', error);
+      targetWindowHandle = null;
     }
   }
 
@@ -741,7 +758,7 @@ ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
     }
 
 
-    await sendTextToETX(text, method, config.restoreClipboard, targetWindowProcessId);
+    await sendTextToETX(text, method, config.restoreClipboard, targetWindowHandle);
 
     
     // 隐藏输入窗口

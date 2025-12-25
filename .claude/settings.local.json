@@ -3,7 +3,16 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(ls:*)",
-      "Bash(cmd:*)"
+      "Bash(cmd:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(cat:*)",
+      "Bash(Measure-Command { powershell -Command \"1\" })",
+      "Bash(git push:*)",
+      "Skill(glm-plan-usage:usage-query)",
+      "Skill(glm-plan-usage:usage-query-skill)",
+      "Bash(powershell:*)",
+      "Bash(find:*)"
     ]
   }
 }

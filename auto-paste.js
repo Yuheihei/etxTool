@@ -1,27 +1,27 @@
 const { clipboard } = require('electron');
 const { keyboard, Key } = require('@nut-tree/nut-js');
-const { activateWindowByPID } = require('./activate_win.js');
+const { activateWindowByHandle } = require('./activate_win.js');
 
 // 自动粘贴功能 - 使用优化的鼠标控制
 const { leftClick, middleClick } = require('./mouse-control.js');
 
 // 激活窗口函数 - 仅在Windows平台使用
-async function activateCurrentWindow(processId) {
+async function activateCurrentWindow(windowHandle) {
   if (process.platform !== 'win32') {
     console.log('非Windows平台，跳过窗口激活');
     return true;
   }
 
-  if (!processId) {
-    console.log('未提供目标窗口进程ID，跳过窗口激活');
+  if (!windowHandle) {
+    console.log('未提供目标窗口句柄，跳过窗口激活');
     return false;
   }
 
   try {
-    console.log('激活目标窗口，进程ID:', processId);
+    console.log('激活目标窗口，句柄:', windowHandle);
 
     // 等待窗口激活完成
-    await activateWindowByPID(processId);
+    await activateWindowByHandle(windowHandle);
 
     return true;
   } catch (error) {
@@ -30,10 +30,10 @@ async function activateCurrentWindow(processId) {
   }
 }
 
-async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessId = null) {
+async function autoPaste(text, pasteMethod = 'middleClick', targetWindowHandle = null) {
   try {
     console.log('开始自动粘贴流程，文本:', text, '方式:', pasteMethod);
-    
+
     // 确保文本在剪贴板中 - 直接写入
     const { clipboard } = require('electron');
     console.log('写入文本到剪贴板:', text);
@@ -44,9 +44,9 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
     console.log('验证剪贴板内容:', verifyClipboard);
 
     // 根据平台决定是否需要先激活窗口
-    if (process.platform === 'win32' && targetWindowProcessId) {
+    if (process.platform === 'win32' && targetWindowHandle) {
       console.log('Windows平台，激活目标窗口');
-      await activateCurrentWindow(targetWindowProcessId);
+      await activateCurrentWindow(targetWindowHandle);
     } else if (process.platform === 'darwin') {
       console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
       await leftClick();
