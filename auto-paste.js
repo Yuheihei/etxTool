@@ -20,8 +20,8 @@ async function activateCurrentWindow(processId) {
   try {
     console.log('激活目标窗口，进程ID:', processId);
 
-    // 直接调用activateWindowByPID函数
-    activateWindowByPID(processId);
+    // 等待窗口激活完成
+    await activateWindowByPID(processId);
 
     return true;
   } catch (error) {
@@ -60,8 +60,8 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
           console.log('未提供目标窗口PID，跳过窗口激活');
         }
         
-        // 短暂延迟确保窗口激活完成
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // 延迟确保窗口激活完成（PowerShell需要时间）
+        await new Promise(resolve => setTimeout(resolve, 150));
       } 
       // macOS需要先左键点击切换窗口焦点
       else if (process.platform === 'darwin') {
