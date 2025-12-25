@@ -19,13 +19,10 @@ async function activateCurrentWindow(processId) {
 
   try {
     console.log('激活目标窗口，进程ID:', processId);
-    
+
     // 直接调用activateWindowByPID函数
     activateWindowByPID(processId);
-    
-    // 等待一段时间让激活操作完成
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+
     return true;
   } catch (error) {
     console.error('激活窗口失败:', error);
@@ -37,32 +34,14 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
   try {
     console.log('开始自动粘贴流程，文本:', text, '方式:', pasteMethod);
     
-    // 确保文本在剪贴板中 - 直接写入，不验证
+    // 确保文本在剪贴板中 - 直接写入
     const { clipboard } = require('electron');
     console.log('写入文本到剪贴板:', text);
     clipboard.writeText(text);
-    
-    // 增加延迟确保剪贴板操作完成
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // 验证剪贴板内容
+
+    // 立即验证剪贴板内容（不需要延迟，writeText是同步的）
     const verifyClipboard = clipboard.readText();
     console.log('验证剪贴板内容:', verifyClipboard);
-    
-    // 如果剪贴板内容仍然不匹配，再次尝试
-    if (verifyClipboard !== text) {
-      console.log('剪贴板内容不匹配，再次尝试写入');
-      clipboard.writeText(text);
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const finalCheck = clipboard.readText();
-      console.log('最终检查剪贴板内容:', finalCheck);
-      
-      if (finalCheck !== text) {
-        console.error('无法将文本写入剪贴板');
-        return false;
-      }
-    }
     
     // 根据平台决定是否需要先左键点击
     try {
@@ -81,8 +60,8 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
           console.log('未提供目标窗口PID，跳过窗口激活');
         }
         
-        // 增加延迟确保窗口激活完成
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // 短暂延迟确保窗口激活完成
+        await new Promise(resolve => setTimeout(resolve, 50));
       } 
       // macOS需要先左键点击切换窗口焦点
       else if (process.platform === 'darwin') {
@@ -90,8 +69,8 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
         await leftClick();
         console.log('鼠标左键点击成功');
         
-        // 增加延迟确保窗口焦点切换完成
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // 短暂延迟确保窗口焦点切换完成
+        await new Promise(resolve => setTimeout(resolve, 50));
       } else {
         console.log('Linux平台，跳过窗口激活和左键点击');
       }
