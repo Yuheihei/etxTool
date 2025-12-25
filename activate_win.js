@@ -1,7 +1,6 @@
 const { exec } = require('child_process');
 const os = require('os');
 const { promisify } = require('util');
-const path = require('path');
 
 const execAsync = promisify(exec);
 
@@ -11,35 +10,26 @@ const execAsync = promisify(exec);
  */
 async function activateWindowByPID(pid) {
     const platform = os.platform();
+    let command = '';
 
     if (platform === 'win32') {
-        // Windows: 使用 VBScript 激活指定 PID 窗口（比 PowerShell 快很多）
-        const vbsScript = `
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.AppActivate ${pid}
-`;
-        // 使用 mshta.exe 执行 VBScript（比 PowerShell 快）
-        const command = `mshta.exe "vbscript:Execute(${JSON.stringify(vbsScript).replace(/"/g, '""')}&window.close)"`;
-
-        try {
-            await execAsync(command, { timeout: 3000 });
-            console.log(`已成功聚焦 PID 为 ${pid} 的窗口 (Windows)`);
-        } catch (error) {
-            console.error(`激活窗口失败: ${error.message}`);
-        }
+        // Windows: 使用 PowerShell 激活指定 PID 窗口
+        command = `powershell -Command "(New-Object -ComObject WScript.Shell).AppActivate(${pid})"`;
     }
     else if (platform === 'darwin') {
         // macOS: 使用 AppleScript 将指定 PID 的进程设为最前
-        const command = `osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is ${pid} to true'`;
-        try {
-            await execAsync(command, { timeout: 5000 });
-            console.log(`已成功聚焦 PID 为 ${pid} 的窗口 (macOS)`);
-        } catch (error) {
-            console.error(`激活窗口失败: ${error.message}`);
-        }
+        command = `osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is ${pid} to true'`;
     }
     else {
         console.error(`不支持的平台: ${platform}`);
+        return;
+    }
+
+    try {
+        await execAsync(command, { timeout: 5000 });
+        console.log(`已成功聚焦 PID 为 ${pid} 的窗口 (${platform})`);
+    } catch (error) {
+        console.error(`激活窗口失败: ${error.message}`);
     }
 }
 

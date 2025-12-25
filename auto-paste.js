@@ -47,12 +47,13 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
     if (process.platform === 'win32' && targetWindowProcessId) {
       console.log('Windows平台，激活目标窗口');
       await activateCurrentWindow(targetWindowProcessId);
-      // 不延迟，VBScript执行很快
+      // 等待窗口激活完成
+      await new Promise(resolve => setTimeout(resolve, 100));
     } else if (process.platform === 'darwin') {
       console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
       await leftClick();
-      // macOS延迟10ms即可
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // 等待焦点切换
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     // 根据选择的方式执行粘贴
