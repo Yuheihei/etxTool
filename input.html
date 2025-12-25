@@ -114,7 +114,7 @@
         body.dark-theme .input-field::placeholder {
             color: #888;
         }
-
+        
         /* 粘贴方式选择框 */
         .paste-method-selector {
             position: absolute;
@@ -130,54 +130,21 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             outline: none;
-            cursor: pointer;
         }
-
+        
         body.dark-theme .paste-method-selector {
             background: rgba(60, 60, 60, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #f0f0f0;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
-
+        
         .paste-method-selector:focus {
             border-color: rgba(59, 130, 246, 0.6);
         }
-
+        
         body.dark-theme .paste-method-selector:focus {
             border-color: rgba(96, 165, 250, 0.6);
-        }
-
-        /* 清空剪贴板选项 */
-        .clear-clipboard-option {
-            position: absolute;
-            top: 8px;
-            right: 110px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 4px 6px;
-            font-size: 11px;
-            color: #333;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        body.dark-theme .clear-clipboard-option {
-            background: rgba(60, 60, 60, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f0f0f0;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .clear-clipboard-option input[type="checkbox"] {
-            width: 12px;
-            height: 12px;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -192,26 +159,15 @@
                 placeholder="输入内容后，按回车发送 | Ctrl+↑↓ 浏览历史记录"
                 autofocus
             ></textarea>
-
-            <div class="clear-clipboard-option" v-if="showClearClipboard">
-                <input
-                    type="checkbox"
-                    id="clearClipboard"
-                    v-model="clearClipboard"
-                    @change="saveClearClipboardPreference"
-                >
-                <label for="clearClipboard" style="cursor: pointer;">清空剪贴板</label>
-            </div>
-
-            <select
-                class="paste-method-selector"
+            <select 
+                class="paste-method-selector" 
                 v-model="selectedPasteMethod"
                 @change="savePasteMethodPreference"
                 ref="pasteMethodSelector"
             >
-                <option value="mouse-middle">鼠标中键</option>
-                <option value="ctrl-shift-v">Ctrl+Shift+V</option>
-                <option value="ctrl-v">Ctrl+V</option>
+                <option value="middleClick">鼠标中键</option>
+                <option value="ctrlV">Ctrl+V</option>
+                <option value="ctrlShiftV">Ctrl+Shift+V</option>
             </select>
         </div>
     </div>
@@ -227,9 +183,7 @@
                     history: [],
                     historyIndex: -1,
                     tempInputText: '', // 保存用户当前输入的内容
-                    selectedPasteMethod: 'mouse-middle', // 默认粘贴方式
-                    clearClipboard: false, // 是否清空剪贴板
-                    showClearClipboard: true // 是否显示清空剪贴板选项
+                    selectedPasteMethod: 'ctrlShiftV' // 默认粘贴方式
                 };
             },
             async mounted() {
@@ -243,21 +197,7 @@
                 try {
                     const config = await window.electronAPI.getConfig();
                     this.currentTheme = config.theme || 'light';
-                    // 处理粘贴方式的配置值
-                    const pm = config.pasteMethod || 'mouse-middle';
-                    // 统一格式：将 ctrlShiftV 转换为 ctrl-shift-v
-                    if (pm === 'ctrlShiftV' || pm === 'ctrl+shift+v') {
-                        this.selectedPasteMethod = 'ctrl-shift-v';
-                    } else if (pm === 'ctrlV' || pm === 'ctrl+v') {
-                        this.selectedPasteMethod = 'ctrl-v';
-                    } else if (pm === 'mouse-middle' || pm === 'middleClick') {
-                        this.selectedPasteMethod = 'mouse-middle';
-                    } else {
-                        this.selectedPasteMethod = pm;
-                    }
-
-                    this.clearClipboard = config.clearClipboard || false;
-                    this.showClearClipboard = config.showClearClipboardOption !== false;
+                    this.selectedPasteMethod = config.pasteMethod || 'middleClick';
                     this.applyTheme();
                 } catch (error) {
                     console.error('加载配置失败:', error);
@@ -315,7 +255,7 @@
                     this.currentTheme = newTheme;
                     this.applyTheme();
                 },
-
+                
                 async savePasteMethodPreference() {
                     try {
                         const config = await window.electronAPI.getConfig();
@@ -326,26 +266,14 @@
                         console.error('保存粘贴方式偏好失败:', error);
                     }
                 },
-
-                async saveClearClipboardPreference() {
-                    try {
-                        const config = await window.electronAPI.getConfig();
-                        config.clearClipboard = this.clearClipboard;
-                        await window.electronAPI.saveConfig(config);
-                        console.log('清空剪贴板偏好已保存:', this.clearClipboard);
-                    } catch (error) {
-                        console.error('保存清空剪贴板偏好失败:', error);
-                    }
-                },
-
+                
                 async sendText() {
                     if (this.inputText.trim()) {
                         try {
                             // 传递文本和粘贴方式
                             await window.electronAPI.sendText({
                                 text: this.inputText.trim(),
-                                pasteMethod: this.selectedPasteMethod,
-                                clearClipboard: this.clearClipboard
+                                pasteMethod: this.selectedPasteMethod
                             });
                             // 发送成功后立即清空输入区
                             this.inputText = '';

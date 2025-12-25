@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   getConfig: () => ipcRenderer.invoke('get-config'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
-  sendText: (text) => ipcRenderer.invoke('send-text', text),
+  sendText: (data) => ipcRenderer.invoke('send-text', data),
   hideInputWindow: () => ipcRenderer.invoke('hide-input-window'),
   openSettings: () => ipcRenderer.invoke('open-settings'),
   getHistory: () => ipcRenderer.invoke('get-history'),

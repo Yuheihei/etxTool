@@ -299,147 +299,52 @@
         </div>
         
         <div class="form-group">
-            <label>焦点切换方式</label>
+            <label>粘贴方式</label>
             <div class="radio-group">
                 <div class="radio-option">
                     <input 
                         type="radio" 
-                        id="focus-none" 
-                        value="none"
-                        v-model="localConfig.focusSwitchMethod"
+                        id="middle-click" 
+                        value="middleClick"
+                        v-model="localConfig.pasteMethod"
                     >
-                    <label for="focus-none">不切换窗口</label>
+                    <label for="middle-click">鼠标中键</label>
                 </div>
                 <div class="radio-option">
                     <input 
                         type="radio" 
-                        id="focus-api" 
-                        value="api"
-                        v-model="localConfig.focusSwitchMethod"
+                        id="ctrl-v" 
+                        value="ctrlV"
+                        v-model="localConfig.pasteMethod"
                     >
-                    <label for="focus-api">使用API切换回原应用</label>
+                    <label for="ctrl-v">Ctrl+V</label>
                 </div>
                 <div class="radio-option">
                     <input 
                         type="radio" 
-                        id="focus-mouse" 
-                        value="mouse-left"
-                        v-model="localConfig.focusSwitchMethod"
+                        id="ctrl-shift-v" 
+                        value="ctrlShiftV"
+                        v-model="localConfig.pasteMethod"
                     >
-                    <label for="focus-mouse">使用鼠标左键切换</label>
+                    <label for="ctrl-shift-v">Ctrl+Shift+V</label>
                 </div>
             </div>
-            <div class="hint">选择输入完成后如何切换焦点回原应用</div>
+            <div class="hint">选择文本粘贴的方式</div>
         </div>
         
         <div class="form-group">
-            <label>粘贴方案</label>
-            <div class="radio-group">
-                <div class="radio-option">
-                    <input
-                        type="radio"
-                        id="paste-middle"
-                        value="mouse-middle"
-                        v-model="localConfig.pasteMethod"
-                    >
-                    <label for="paste-middle">鼠标中键点击</label>
-                </div>
-                <div class="radio-option">
-                    <input
-                        type="radio"
-                        id="paste-ctrl-shift-v"
-                        value="ctrl-shift-v"
-                        v-model="localConfig.pasteMethod"
-                    >
-                    <label for="paste-ctrl-shift-v">Ctrl+Shift+V (Mac: Cmd+Shift+V)</label>
-                </div>
-                <div class="radio-option">
-                    <input
-                        type="radio"
-                        id="paste-ctrl-v"
-                        value="ctrl-v"
-                        v-model="localConfig.pasteMethod"
-                    >
-                    <label for="paste-ctrl-v">Ctrl+V (Mac: Cmd+V)</label>
-                </div>
-            </div>
-            <div class="hint">选择粘贴文本的方式</div>
-        </div>
-
-        <div class="form-group">
-            <label>剪贴板设置</label>
+            <label>剪贴板恢复</label>
             <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="showClearClipboardOption"
-                    v-model="localConfig.showClearClipboardOption"
+                <input 
+                    type="checkbox" 
+                    id="restore-clipboard" 
+                    v-model="localConfig.restoreClipboard"
                 >
-                <label for="showClearClipboardOption">在输入窗口显示"清空剪贴板"选项</label>
+                <label for="restore-clipboard">粘贴后恢复原有剪贴板内容</label>
             </div>
-            <div class="hint">勾选后，输入窗口右上角会显示清空剪贴板的复选框</div>
+            <div class="hint">启用后会在粘贴完成后恢复之前的剪贴板内容</div>
         </div>
-
-        <div class="form-group">
-            <label>兼容性设置 (虚拟机/远程桌面)</label>
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="useTransparentWindow"
-                    v-model="localConfig.useTransparentWindow"
-                >
-                <label for="useTransparentWindow">使用透明窗口</label>
-            </div>
-            <div class="hint">如果在HyperV虚拟机或远程桌面中窗口不可见，请取消勾选此项</div>
-        </div>
-
-        <div class="form-group">
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="useFramelessWindow"
-                    v-model="localConfig.useFramelessWindow"
-                >
-                <label for="useFramelessWindow">使用无边框窗口</label>
-            </div>
-            <div class="hint">如果窗口显示异常，请取消勾选此项</div>
-        </div>
-
-        <div class="form-group">
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="skipTaskbar"
-                    v-model="localConfig.skipTaskbar"
-                >
-                <label for="skipTaskbar">跳过任务栏显示</label>
-            </div>
-            <div class="hint">勾选后输入窗口不会在任务栏中显示</div>
-        </div>
-
-        <div class="form-group">
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="centerOnScreen"
-                    v-model="localConfig.centerOnScreen"
-                >
-                <label for="centerOnScreen">在屏幕中央显示窗口</label>
-            </div>
-            <div class="hint">勾选后窗口会在屏幕中央显示而不是跟随鼠标（适用于虚拟机/多显示器环境）</div>
-        </div>
-
-        <div class="form-group">
-            <div class="checkbox-group">
-                <input
-                    type="checkbox"
-                    id="hideOnBlur"
-                    v-model="localConfig.hideOnBlur"
-                >
-                <label for="hideOnBlur">失焦时自动隐藏窗口</label>
-            </div>
-            <div class="hint">勾选后窗口失去焦点时会自动隐藏（虚拟机环境建议不勾选）</div>
-        </div>
-
+        
         <div class="button-container">
             <button class="btn btn-save" @click="saveSettings">保存</button>
             <button class="btn btn-cancel" @click="cancelSettings">取消</button>
@@ -460,14 +365,8 @@
                         theme: 'light',
                         windowHeight: 120,
                         windowWidth: 600,
-                        focusSwitchMethod: 'mouse-left',
-                        pasteMethod: 'mouse-middle',
-                        useTransparentWindow: true,
-                        useFramelessWindow: true,
-                        skipTaskbar: true,
-                        centerOnScreen: false,
-                        showClearClipboardOption: true,
-                        hideOnBlur: false
+                        pasteMethod: 'ctrlShiftV',
+                        restoreClipboard: false
                     },
                     showSuccess: false
                 };

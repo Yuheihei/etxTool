@@ -119,3 +119,4 @@ logs
 # Config
 config.json
 .etxtool/
+.claude/settings.local.json

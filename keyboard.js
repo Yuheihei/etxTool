@@ -9,127 +9,52 @@ function containsChinese(text) {
 }
 
 // 发送文本到ETX
-async function sendTextToETX(text, config = {}) {
+async function sendTextToETX(text, pasteMethod = 'middleClick', restoreClipboard = false, targetWindowProcessId = null) {
   try {
-    console.log('准备发送文本:', text);
-    console.log('使用配置:', config);
-
-    // 如果使用API切换方式且有焦点窗口信息，直接调用PowerShell脚本
-    if (config.focusSwitchMethod === 'api' && config.lastFocusedWindow) {
-      // 使用app.getAppPath()获取应用路径，确保在打包后能正确找到脚本
-      const appPath = app.getAppPath();
-      const scriptPath = path.join(appPath, 'activatewin.ps1');
-
-      // 根据粘贴选项映射到PowerShell脚本的PasteMethod参数
-      // 1: Ctrl+V, 2: Ctrl+Shift+V, 3: 鼠标中键(Shift+Insert)
-      let pasteMethodCode = 1;
-      if (config.pasteMethod === 'ctrl-shift-v') {
-        pasteMethodCode = 2;
-      } else if (config.pasteMethod === 'mouse-middle') {
-        pasteMethodCode = 3;
-      }
-
-      // 将参数分别转为 Base64 (UTF-16LE 编码)
-      const b64Title = Buffer.from(config.lastFocusedWindow.title, 'utf16le').toString('base64');
-      const b64Text = Buffer.from(text, 'utf16le').toString('base64');
-
-      // 构造命令，增加执行策略和调试信息
-      const fullCommand = `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}" -Base64Title "${b64Title}" -Base64Text "${b64Text}" -PasteMethod ${pasteMethodCode}`;
-
-      return new Promise((resolve, reject) => {
-        console.log('=== PowerShell调试信息 ===');
-        console.log('应用路径:', appPath);
-        console.log('脚本路径:', scriptPath);
-        console.log('脚本是否存在:', require('fs').existsSync(scriptPath));
-        console.log('执行命令:', fullCommand);
-        console.log('========================');
-
-        exec(fullCommand, { timeout: 10000 }, (error, stdout, stderr) => {
-          if (error) {
-            console.error('=== PowerShell执行失败 ===');
-            console.error('错误信息:', error.message);
-            console.error('错误代码:', error.code);
-            console.error('错误信号:', error.signal);
-            console.error('标准错误:', stderr);
-            console.error('标准输出:', stdout);
-            console.error('========================');
-
-            // 尝试备选方案：使用更宽松的执行策略
-            if (error.code === 1 && stderr.includes('execution')) {
-              console.log('尝试使用备选执行策略...');
-              const fallbackCommand = `powershell.exe -NoProfile -ExecutionPolicy Unrestricted -File "${scriptPath}" -Base64Title "${b64Title}" -Base64Text "${b64Text}" -PasteMethod ${pasteMethodCode}`;
-
-              exec(fallbackCommand, { timeout: 10000 }, (fallbackError, fallbackStdout, fallbackStderr) => {
-                if (fallbackError) {
-                  console.error('备选方案也失败:', fallbackError);
-                  resolve(false);
-                } else {
-                  console.log('备选方案成功:', fallbackStdout.trim());
-                  resolve(true);
-                }
-              });
+    console.log('准备发送文本:', text, '粘贴方式:', pasteMethod, '恢复剪贴板:', restoreClipboard, '目标窗口PID:', targetWindowProcessId);
+    
+    let previousClipboard = '';
+    
+    // 只有在需要恢复剪贴板时才保存当前内容
+    if (restoreClipboard) {
+      previousClipboard = clipboard.readText();
+      console.log('保存的剪贴板内容:', previousClipboard);
+    }
+    
+    // 尝试自动粘贴（autoPaste函数内部会处理剪贴板写入）
+    const pasteSuccess = await autoPaste(text, pasteMethod, targetWindowProcessId);
+    
+    if (!pasteSuccess) {
+      console.log('自动粘贴失败，需要手动粘贴');
+    }
+    
+    // 只有在配置要求恢复剪贴板时才恢复
+    if (restoreClipboard) {
+      return new Promise((resolve) => {
+        // 延迟恢复之前的剪贴板内容，给粘贴操作足够时间完成
+        setTimeout(() => {
+          try {
+            console.log('恢复剪贴板内容');
+            clipboard.writeText(previousClipboard);
+            
+            // 验证剪贴板是否已恢复
+            const restoredClipboard = clipboard.readText();
+            if (restoredClipboard === previousClipboard) {
+              console.log('剪贴板内容已成功恢复');
             } else {
-              resolve(false);
+              console.warn('剪贴板内容可能未正确恢复');
             }
-            return;
+            
+            resolve(true);
+          } catch (error) {
+            console.error('恢复剪贴板内容时出错:', error);
+            resolve(false);
           }
-
-          if (stderr) {
-            console.warn('PowerShell脚本警告:', stderr);
-          }
-          console.log('PowerShell脚本成功执行，输出:', stdout.trim());
-          resolve(true);
-        });
+        }, 2000);
       });
-    } else if (config.focusSwitchMethod === 'mouse-left') {
-      // 使用鼠标左键点击切换焦点的方式
-      console.log('使用鼠标左键切换方式');
-
-      // 获取鼠标当前位置并记录
-      const { screen } = require('electron');
-      const cursorPos = screen.getCursorScreenPoint();
-      console.log('当前鼠标位置:', cursorPos);
-
-      // 将文本复制到剪贴板
-      const { clipboard } = require('electron');
-      clipboard.writeText(text);
-      console.log('文本已复制到剪贴板');
-
-      // 如果需要清空剪贴板，在延迟后执行
-      if (config.clearClipboard) {
-        setTimeout(() => {
-          clipboard.writeText('');
-          console.log('剪贴板已清空');
-        }, 5000); // 5秒后清空
-      }
-
-      // 模拟鼠标左键点击当前位置
-      // 注意：这里需要使用robotjs或其他方式模拟鼠标点击
-      // 由于可能没有安装robotjs，先记录日志
-      console.log('请手动点击目标窗口，然后使用快捷键粘贴');
-      console.log('粘贴方式:', config.pasteMethod);
-
-      return true;
-    } else if (config.focusSwitchMethod === 'none') {
-      // 不切换窗口，只复制到剪贴板
-      console.log('不切换窗口，只复制到剪贴板');
-
-      const { clipboard } = require('electron');
-      clipboard.writeText(text);
-      console.log('文本已复制到剪贴板');
-
-      // 如果需要清空剪贴板
-      if (config.clearClipboard) {
-        setTimeout(() => {
-          clipboard.writeText('');
-          console.log('剪贴板已清空');
-        }, 5000);
-      }
-
-      return true;
     } else {
-      console.log('未知的焦点切换方式:', config.focusSwitchMethod);
-      return false;
+      console.log('不恢复剪贴板内容');
+      return true;
     }
   } catch (error) {
     console.error('发送文本失败:', error);
