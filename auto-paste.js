@@ -1,28 +1,27 @@
 const { clipboard } = require('electron');
 const { keyboard, Key } = require('@nut-tree/nut-js');
-const { activateWindowByHandle } = require('./activate_win.js');
+const { activateWindowByHandle, activateWindowByPID } = require('./activate_win.js');
 
 // 自动粘贴功能 - 使用优化的鼠标控制
 const { leftClick, middleClick } = require('./mouse-control.js');
 
-// 激活窗口函数 - 仅在Windows平台使用
-async function activateCurrentWindow(windowHandle) {
-  if (process.platform !== 'win32') {
-    console.log('非Windows平台，跳过窗口激活');
-    return true;
-  }
-
-  if (!windowHandle) {
-    console.log('未提供目标窗口句柄，跳过窗口激活');
+// 激活窗口函数 - 跨平台支持
+async function activateCurrentWindow(windowIdentifier) {
+  if (!windowIdentifier) {
+    console.log('未提供目标窗口标识符，跳过窗口激活');
     return false;
   }
 
   try {
-    console.log('激活目标窗口，句柄:', windowHandle);
-
-    // 等待窗口激活完成
-    await activateWindowByHandle(windowHandle);
-
+    if (process.platform === 'win32') {
+      // Windows: 使用窗口句柄
+      console.log('激活目标窗口，句柄:', windowIdentifier);
+      await activateWindowByHandle(windowIdentifier);
+    } else {
+      // macOS/Linux: 使用进程ID
+      console.log('激活目标窗口，PID:', windowIdentifier);
+      await activateWindowByPID(windowIdentifier);
+    }
     return true;
   } catch (error) {
     console.error('激活窗口失败:', error);
@@ -30,7 +29,7 @@ async function activateCurrentWindow(windowHandle) {
   }
 }
 
-async function autoPaste(text, pasteMethod = 'middleClick', targetWindowHandle = null) {
+async function autoPaste(text, pasteMethod = 'middleClick', targetWindowIdentifier = null) {
   try {
     console.log('开始自动粘贴流程，文本:', text, '方式:', pasteMethod);
 
@@ -44,12 +43,9 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowHandle =
     console.log('验证剪贴板内容:', verifyClipboard);
 
     // 根据平台决定是否需要先激活窗口
-    if (process.platform === 'win32' && targetWindowHandle) {
-      console.log('Windows平台，激活目标窗口');
-      await activateCurrentWindow(targetWindowHandle);
-    } else if (process.platform === 'darwin') {
-      console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
-      await leftClick();
+    if (targetWindowIdentifier) {
+      console.log('激活目标窗口');
+      await activateCurrentWindow(targetWindowIdentifier);
     }
 
     // 根据选择的方式执行粘贴

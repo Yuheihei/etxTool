@@ -16,8 +16,9 @@ let isDev = process.argv.includes('--dev');
 
 // 存储上次鼠标位置
 
-// 存储目标窗口的句柄（用于Windows平台激活窗口）
-let targetWindowHandle = null;
+// 存储目标窗口标识符（用于跨平台激活窗口）
+let targetWindowHandle = null;  // Windows: 窗口句柄
+let targetWindowPid = null;     // macOS/Linux: 进程ID
 
 // 配置文件路径
 const configPath = path.join(os.homedir(), '.etxtool', 'config.json');
@@ -151,8 +152,9 @@ function addToHistory(text) {
 
 // 创建输入窗口
 async function createInputWindow() {
-  // 在Windows平台，显示输入窗口前先获取当前活动窗口的句柄
+  // 根据平台获取目标窗口标识符
   if (process.platform === 'win32') {
+    // Windows平台：显示输入窗口前先获取当前活动窗口的句柄
     try {
       const activeWindow = await activeWin();
       if (activeWindow && activeWindow.owner.processId) {
@@ -180,6 +182,18 @@ async function createInputWindow() {
     } catch (error) {
       console.error('Failed to get target window handle:', error);
       targetWindowHandle = null;
+    }
+  } else {
+    // macOS/Linux平台：获取当前活动窗口的进程ID
+    try {
+      const activeWindow = await activeWin();
+      if (activeWindow && activeWindow.owner.processId) {
+        targetWindowPid = activeWindow.owner.processId;
+        console.log('Saved target window PID:', targetWindowPid);
+      }
+    } catch (error) {
+      console.error('Failed to get target window PID:', error);
+      targetWindowPid = null;
     }
   }
 
@@ -758,7 +772,7 @@ ipcMain.handle('send-text', async (event, { text, pasteMethod }) => {
     }
 
 
-    await sendTextToETX(text, method, config.restoreClipboard, targetWindowHandle);
+    await sendTextToETX(text, method, config.restoreClipboard, targetWindowHandle || targetWindowPid);
 
     
     // 隐藏输入窗口

@@ -12,7 +12,8 @@
       "Skill(glm-plan-usage:usage-query)",
       "Skill(glm-plan-usage:usage-query-skill)",
       "Bash(powershell:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebSearch"
     ]
   }
 }

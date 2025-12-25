@@ -1,5 +1,8 @@
 const koffi = require('koffi');
+const { exec } = require('child_process');
 const os = require('os');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 
 /**
  * Windows 平台直接通过窗口句柄激活窗口
@@ -7,7 +10,7 @@ const os = require('os');
  */
 async function activateWindowByHandle(hwnd) {
     if (os.platform() !== 'win32') {
-        console.log('非Windows平台，不支持直接激活窗口');
+        console.log('非Windows平台，不支持通过句柄激活窗口');
         return;
     }
 
@@ -29,5 +32,32 @@ async function activateWindowByHandle(hwnd) {
     }
 }
 
+/**
+ * macOS/Linux 平台通过进程ID激活窗口
+ * @param {number} pid 进程 ID
+ */
+async function activateWindowByPID(pid) {
+    const platform = os.platform();
+    let command = '';
+
+    if (platform === 'darwin') {
+        // macOS: 使用 AppleScript 将指定 PID 的进程设为最前
+        command = `osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is ${pid} to true'`;
+    } else if (platform === 'linux') {
+        // Linux: 使用 wmctrl 激活窗口
+        command = `wmctrl -ia ${pid}`;
+    } else {
+        console.error(`不支持的平台: ${platform}`);
+        return;
+    }
+
+    try {
+        await execAsync(command, { timeout: 5000 });
+        console.log(`已成功激活 PID 为 ${pid} 的窗口 (${platform})`);
+    } catch (error) {
+        console.error(`激活窗口失败: ${error.message}`);
+    }
+}
+
 // 导出函数供其他模块使用
-module.exports = { activateWindowByHandle };
+module.exports = { activateWindowByHandle, activateWindowByPID };

@@ -8,9 +8,9 @@ function containsChinese(text) {
 }
 
 // 发送文本到ETX
-async function sendTextToETX(text, pasteMethod = 'middleClick', restoreClipboard = false, targetWindowHandle = null) {
+async function sendTextToETX(text, pasteMethod = 'middleClick', restoreClipboard = false, targetWindowIdentifier = null) {
   try {
-    console.log('准备发送文本:', text, '粘贴方式:', pasteMethod, '恢复剪贴板:', restoreClipboard, '目标窗口句柄:', targetWindowHandle);
+    console.log('准备发送文本:', text, '粘贴方式:', pasteMethod, '恢复剪贴板:', restoreClipboard, '目标窗口标识符:', targetWindowIdentifier);
     
     let previousClipboard = '';
     
@@ -21,7 +21,7 @@ async function sendTextToETX(text, pasteMethod = 'middleClick', restoreClipboard
     }
     
     // 尝试自动粘贴（autoPaste函数内部会处理剪贴板写入）
-    const pasteSuccess = await autoPaste(text, pasteMethod, targetWindowHandle);
+    const pasteSuccess = await autoPaste(text, pasteMethod, targetWindowIdentifier);
     
     if (!pasteSuccess) {
       console.log('自动粘贴失败，需要手动粘贴');
