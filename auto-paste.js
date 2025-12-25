@@ -45,10 +45,13 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
     
     // 根据平台决定是否需要先左键点击
     try {
+      // 暂时禁用窗口激活，直接粘贴（焦点会自动返回到之前的窗口）
+      // 如果后续需要启用，可以在设置中添加选项
+      /*
       // Windows平台：先激活窗口，再进行粘贴
       if (process.platform === 'win32') {
         console.log('Windows平台，激活目标窗口');
-        
+
         if (targetWindowProcessId) {
           const activateSuccess = await activateCurrentWindow(targetWindowProcessId);
           if (activateSuccess) {
@@ -59,21 +62,25 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
         } else {
           console.log('未提供目标窗口PID，跳过窗口激活');
         }
-        
+
         // 延迟确保窗口激活完成（PowerShell需要时间）
         await new Promise(resolve => setTimeout(resolve, 150));
-      } 
+      }
       // macOS需要先左键点击切换窗口焦点
       else if (process.platform === 'darwin') {
         console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
         await leftClick();
         console.log('鼠标左键点击成功');
-        
+
         // 短暂延迟确保窗口焦点切换完成
         await new Promise(resolve => setTimeout(resolve, 50));
       } else {
         console.log('Linux平台，跳过窗口激活和左键点击');
       }
+      */
+      console.log('跳过窗口激活，直接执行粘贴');
+      await new Promise(resolve => setTimeout(resolve, 50)); // 极短延迟确保输入框隐藏完成
+    }
       
       // 根据选择的方式执行粘贴
       switch (pasteMethod) {
