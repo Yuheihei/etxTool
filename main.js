@@ -122,27 +122,36 @@ async function createInputWindow() {
       const activeWindow = await activeWin();
       if (activeWindow && activeWindow.owner.processId) {
         targetWindowProcessId = activeWindow.owner.processId;
-        console.log('保存目标窗口进程ID:', targetWindowProcessId);
+        console.log('Saved target window PID:', targetWindowProcessId);
       }
     } catch (error) {
-      console.error('获取目标窗口PID失败:', error);
+      console.error('Failed to get target window PID:', error);
       targetWindowProcessId = null;
     }
   }
 
   if (inputWindow) {
+    console.log('Input window exists, repositioning and showing');
     positionWindowAtCursor();
   // 延迟一丁点时间再显示，给 OS 响应坐标变更的时间
   setTimeout(() => {
     if (inputWindow && !inputWindow.isDestroyed()) {
-      console.log('输入窗口已存在，显示并聚焦');
+      console.log('Input window exists, showing and focusing');
+      inputWindow.show();
       inputWindow.setOpacity(Math.max(config.opacity / 100, 0.5));
       inputWindow.setIgnoreMouseEvents(false);
       inputWindow.focus();
       inputWindow.webContents.send('history-reload');
+
+      // 额外检查：确保窗口在可视区域内
+      const bounds = inputWindow.getBounds();
+      console.log('Window current bounds:', bounds);
+      const { screen } = require('electron');
+      const currentScreen = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+      console.log('Current screen work area:', currentScreen.workArea);
     }
   }, 50);
-    
+
     return;
   }
 
@@ -159,12 +168,13 @@ async function createInputWindow() {
     }
   };
 
-  // 所有平台都使用无边框透明窗口
+  // 所有平台都使用无边框窗口
   windowOptions.frame = false;
-  windowOptions.transparent = true;
+  // HyperV 不支持透明窗口，所以禁用透明
+  windowOptions.transparent = false;
   windowOptions.roundedCorners = true;
-  // 应用透明度设置
-  windowOptions.opacity = Math.max(config.opacity / 100, 0.5);
+  // 应用透明度设置（对非透明窗口无效，但保留配置）
+  windowOptions.opacity = 1.0;
   
   // macOS特殊设置，确保在全屏应用上方显示但不遮挡输入法
   if (process.platform === 'darwin') {
@@ -177,6 +187,9 @@ async function createInputWindow() {
   }
 
   inputWindow = new BrowserWindow(windowOptions);
+
+  // Force window to be on top after creation (important for HyperV)
+  inputWindow.setAlwaysOnTop(true, 'screen-saver');
 
   inputWindow.loadFile('input.html');
   
@@ -205,13 +218,29 @@ async function createInputWindow() {
   // 窗口准备好后定位到鼠标位置
   inputWindow.once('ready-to-show', () => {
     // 先显示窗口，然后定位
-    // inputWindow.show();
+    console.log('Window ready-to-show event fired');
+    inputWindow.show();
+    console.log('Window shown, starting positioning');
     positionWindowAtCursor();
     // macOS特殊处理：立即设置窗口层级但不遮挡输入法
     if (process.platform === 'darwin') {
       inputWindow.setAlwaysOnTop(true, 'floating');
     }
-   
+
+    // 额外延迟后再次确保窗口可见并聚焦
+    setTimeout(() => {
+      if (inputWindow && !inputWindow.isDestroyed()) {
+        console.log('Delayed check: ensuring window visible and focused');
+        const bounds = inputWindow.getBounds();
+        console.log('Window current bounds:', bounds);
+        if (!inputWindow.isVisible()) {
+          console.log('Window not visible, forcing show');
+          inputWindow.show();
+        }
+        inputWindow.focus();
+      }
+    }, 200);
+
     // setTimeout(() => {
     //   inputWindow.show();
     //   inputWindow.webContents.send('history-reload');
@@ -265,30 +294,30 @@ function createSettingsWindow() {
 // 将窗口定位到鼠标位置附近
 function positionWindowAtCursor() {
   if (!inputWindow || inputWindow.isDestroyed()) return;
-  
+
   try {
-    
+
       const { screen } = require('electron');
       const cursorPosition = screen.getCursorScreenPoint();
       const currentScreen = screen.getDisplayNearestPoint(cursorPosition);
       const { width, height } = inputWindow.getBounds();
       const { workArea } = currentScreen;
-    
-    
+
+
     // 计算窗口位置（优先显示在鼠标右下方）
     let x = cursorPosition.x + 20;
     let y = cursorPosition.y + 20;
-    
+
     // 确保窗口不超出屏幕边界
-    console.log('屏幕工作区域:', workArea);
-    
+    console.log('Screen work area:', workArea);
+
     // macOS特殊处理：为输入法候选框预留空间
     let imeCandidateHeight = 0;
     if (process.platform === 'darwin') {
       // 为输入法候选框预留150像素的高度
       imeCandidateHeight = 150;
     }
-    
+
     // 处理右边界 - 如果超出则显示在左侧
     if (x + width > workArea.x + workArea.width) {
       x = cursorPosition.x - width - 20;
@@ -297,7 +326,7 @@ function positionWindowAtCursor() {
         x = workArea.x + workArea.width - width - 10;
       }
     }
-    
+
     // 处理下边界 - 如果超出则显示在上方，考虑输入法候选框高度
     if (y + height + imeCandidateHeight > workArea.y + workArea.height) {
       y = cursorPosition.y - height - 20;
@@ -306,20 +335,36 @@ function positionWindowAtCursor() {
         y = workArea.y + workArea.height - height - imeCandidateHeight - 10;
       }
     }
-    
+
     // 处理左边界
     if (x < workArea.x) {
       x = workArea.x + 10;
     }
-    
+
     // 处理上边界
     if (y < workArea.y) {
       y = workArea.y + 10;
     }
-    
+
+    // 安全检查：确保窗口在当前屏幕的工作区域内
+    // 在 HyperV 等虚拟环境中，坐标可能是负数，但只要在 workArea 范围内就是有效的
+    const isInWorkArea = y >= workArea.y && y <= workArea.y + workArea.height &&
+                         x >= workArea.x && x <= workArea.x + workArea.width;
+
+    if (!isInWorkArea) {
+      console.warn('Window would be outside work area, centering in current screen');
+      x = workArea.x + (workArea.width / 2) - (width / 2);
+      y = workArea.y + (workArea.height / 2) - (height / 2);
+      console.log(`Centered in current screen: x=${Math.floor(x)}, y=${Math.floor(y)}`);
+    }
+
     // 设置窗口位置并确保窗口可见
+    console.log(`Window will be positioned at: x=${Math.floor(x)}, y=${Math.floor(y)}`);
+    console.log(`Mouse position: x=${cursorPosition.x}, y=${cursorPosition.y}`);
+    console.log(`Window size: width=${width}, height=${height}`);
     inputWindow.setPosition(Math.floor(x), Math.floor(y), false);
-    
+    console.log(`Window position set, window visible: ${inputWindow.isVisible()}`);
+
     // // macOS特殊处理：确保窗口在最前面但不遮挡输入法
     // if (process.platform === 'darwin') {
     //   // 设置窗口层级，避免遮挡输入法候选栏
