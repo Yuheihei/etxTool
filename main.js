@@ -131,7 +131,12 @@ async function createInputWindow() {
   }
 
   if (inputWindow) {
-    console.log('Input window exists, repositioning and showing');
+    console.log('Input window exists, updating size and showing');
+    // 更新窗口大小
+    const width = parseInt(config.windowWidth) || 600;
+    const height = parseInt(config.windowHeight) || 120;
+    inputWindow.setSize(width, height);
+    // 重新定位窗口
     positionWindowAtCursor();
   // 延迟一丁点时间再显示，给 OS 响应坐标变更的时间
   setTimeout(() => {
@@ -614,11 +619,15 @@ ipcMain.handle('save-config', (event, newConfig) => {
     inputWindow.setOpacity(Math.max(config.opacity / 100, 0.5));
   }
   
-  // 如果输入窗口存在，更新窗口大小
+  // 如果输入窗口存在，更新窗口大小（移除动画，立即生效）
   if (inputWindow && !inputWindow.isDestroyed()) {
     const width = parseInt(config.windowWidth) || 600;
     const height = parseInt(config.windowHeight) || 120;
-    inputWindow.setSize(width, height, true);
+    inputWindow.setSize(width, height);
+    // 调整大小后重新定位，避免超出屏幕
+    if (inputWindow.isVisible()) {
+      positionWindowAtCursor();
+    }
   }
   
   // 如果输入窗口存在，通知主题更新
