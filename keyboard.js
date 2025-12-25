@@ -1,7 +1,6 @@
 // 键盘模拟模块
-const { exec } = require('child_process');
-const path = require('path');
-const { app } = require('electron');
+const { clipboard } = require('electron');
+const { autoPaste } = require('./auto-paste.js');
 
 // 检查是否包含中文字符
 function containsChinese(text) {
