@@ -51,7 +51,7 @@ function toggleDevTools() {
       inputWindow.webContents.closeDevTools();
       console.log('输入窗口开发面板已关闭');
     } else {
-      inputWindow.webContents.openDevTools();
+      inputWindow.webContents.openDevTools({ mode: 'undocked' });
       console.log('输入窗口开发面板已打开');
     }
     return;
@@ -63,7 +63,7 @@ function toggleDevTools() {
       settingsWindow.webContents.closeDevTools();
       console.log('设置窗口开发面板已关闭');
     } else {
-      settingsWindow.webContents.openDevTools();
+      settingsWindow.webContents.openDevTools({ mode: 'undocked' });
       console.log('设置窗口开发面板已打开');
     }
     return;
