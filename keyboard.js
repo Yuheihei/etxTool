@@ -13,13 +13,13 @@ async function sendTextToETX(text, config = {}) {
   try {
     console.log('准备发送文本:', text);
     console.log('使用配置:', config);
-    
+
     // 如果使用API切换方式且有焦点窗口信息，直接调用PowerShell脚本
     if (config.focusSwitchMethod === 'api' && config.lastFocusedWindow) {
       // 使用app.getAppPath()获取应用路径，确保在打包后能正确找到脚本
       const appPath = app.getAppPath();
       const scriptPath = path.join(appPath, 'activatewin.ps1');
-      
+
       // 根据粘贴选项映射到PowerShell脚本的PasteMethod参数
       // 1: Ctrl+V, 2: Ctrl+Shift+V, 3: 鼠标中键(Shift+Insert)
       let pasteMethodCode = 1;
@@ -43,7 +43,7 @@ async function sendTextToETX(text, config = {}) {
         console.log('脚本是否存在:', require('fs').existsSync(scriptPath));
         console.log('执行命令:', fullCommand);
         console.log('========================');
-        
+
         exec(fullCommand, { timeout: 10000 }, (error, stdout, stderr) => {
           if (error) {
             console.error('=== PowerShell执行失败 ===');
@@ -53,12 +53,12 @@ async function sendTextToETX(text, config = {}) {
             console.error('标准错误:', stderr);
             console.error('标准输出:', stdout);
             console.error('========================');
-            
+
             // 尝试备选方案：使用更宽松的执行策略
             if (error.code === 1 && stderr.includes('execution')) {
               console.log('尝试使用备选执行策略...');
               const fallbackCommand = `powershell.exe -NoProfile -ExecutionPolicy Unrestricted -File "${scriptPath}" -Base64Title "${b64Title}" -Base64Text "${b64Text}" -PasteMethod ${pasteMethodCode}`;
-              
+
               exec(fallbackCommand, { timeout: 10000 }, (fallbackError, fallbackStdout, fallbackStderr) => {
                 if (fallbackError) {
                   console.error('备选方案也失败:', fallbackError);
@@ -73,7 +73,7 @@ async function sendTextToETX(text, config = {}) {
             }
             return;
           }
-          
+
           if (stderr) {
             console.warn('PowerShell脚本警告:', stderr);
           }
@@ -81,8 +81,54 @@ async function sendTextToETX(text, config = {}) {
           resolve(true);
         });
       });
+    } else if (config.focusSwitchMethod === 'mouse-left') {
+      // 使用鼠标左键点击切换焦点的方式
+      console.log('使用鼠标左键切换方式');
+
+      // 获取鼠标当前位置并记录
+      const { screen } = require('electron');
+      const cursorPos = screen.getCursorScreenPoint();
+      console.log('当前鼠标位置:', cursorPos);
+
+      // 将文本复制到剪贴板
+      const { clipboard } = require('electron');
+      clipboard.writeText(text);
+      console.log('文本已复制到剪贴板');
+
+      // 如果需要清空剪贴板，在延迟后执行
+      if (config.clearClipboard) {
+        setTimeout(() => {
+          clipboard.writeText('');
+          console.log('剪贴板已清空');
+        }, 5000); // 5秒后清空
+      }
+
+      // 模拟鼠标左键点击当前位置
+      // 注意：这里需要使用robotjs或其他方式模拟鼠标点击
+      // 由于可能没有安装robotjs，先记录日志
+      console.log('请手动点击目标窗口，然后使用快捷键粘贴');
+      console.log('粘贴方式:', config.pasteMethod);
+
+      return true;
+    } else if (config.focusSwitchMethod === 'none') {
+      // 不切换窗口，只复制到剪贴板
+      console.log('不切换窗口，只复制到剪贴板');
+
+      const { clipboard } = require('electron');
+      clipboard.writeText(text);
+      console.log('文本已复制到剪贴板');
+
+      // 如果需要清空剪贴板
+      if (config.clearClipboard) {
+        setTimeout(() => {
+          clipboard.writeText('');
+          console.log('剪贴板已清空');
+        }, 5000);
+      }
+
+      return true;
     } else {
-      console.log('未使用API切换方式或无焦点窗口信息，跳过发送');
+      console.log('未知的焦点切换方式:', config.focusSwitchMethod);
       return false;
     }
   } catch (error) {

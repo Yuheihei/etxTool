@@ -11,14 +11,14 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         /* 浅色主题 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
             color: #1a1a1a;
             border-radius: 16px;
-            box-shadow: 
+            box-shadow:
                 0 20px 40px rgba(0, 0, 0, 0.1),
                 0 8px 16px rgba(0, 0, 0, 0.08),
                 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
@@ -29,35 +29,36 @@
             width: 100vw;
             height: 100vh;
         }
-        
+
         /* 深色主题 */
         body.dark-theme {
             background: linear-gradient(135deg, rgba(30, 30, 30, 0.98) 0%, rgba(45, 45, 45, 0.98) 100%);
             color: #f0f0f0;
-            box-shadow: 
+            box-shadow:
                 0 20px 40px rgba(0, 0, 0, 0.4),
                 0 8px 16px rgba(0, 0, 0, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
         }
-        
+
         html {
             border-radius: 16px;
             overflow: hidden;
         }
-        
+
         #app {
             padding: 6px;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        
+
         .input-container {
             flex: 1;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
-        
+
         .input-field {
             flex: 1;
             border: 1px solid rgba(0, 0, 0, 0.08);
@@ -69,77 +70,155 @@
             outline: none;
             background: rgba(255, 255, 255, 0.8);
             color: #1a1a1a;
-            box-shadow: 
+            box-shadow:
                 0 4px 12px rgba(0, 0, 0, 0.05) inset,
                 0 1px 2px rgba(0, 0, 0, 0.03);
             font-weight: 400;
         }
-        
+
         .input-field:focus {
             border-color: rgba(59, 130, 246, 0.6);
             background: rgba(255, 255, 255, 0.95);
-            box-shadow: 
+            box-shadow:
                 0 0 0 2.7px rgba(59, 130, 246, 0.25),
                 0 0 16px rgba(59, 130, 246, 0.2),
                 0 4px 12px rgba(0, 0, 0, 0.05) inset,
                 0 1px 2px rgba(0, 0, 0, 0.03);
         }
-        
+
         .input-field::placeholder {
             color: #999;
             opacity: 0.8;
         }
-        
+
         /* 深色主题输入框 */
         body.dark-theme .input-field {
             background: rgba(50, 50, 50, 0.8);
             color: #f0f0f0;
             border-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 
+            box-shadow:
                 0 4px 12px rgba(0, 0, 0, 0.3) inset,
                 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        
+
         body.dark-theme .input-field:focus {
             background: rgba(60, 60, 60, 0.95);
             border-color: rgba(96, 165, 250, 0.6);
-            box-shadow: 
+            box-shadow:
                 0 0 0 2.7px rgba(96, 165, 250, 0.25),
                 0 0 16px rgba(96, 165, 250, 0.2),
                 0 4px 12px rgba(0, 0, 0, 0.3) inset,
                 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        
+
         body.dark-theme .input-field::placeholder {
             color: #888;
         }
-        
-        
-        
-        
-        
-        
+
+        /* 粘贴方式选择框 */
+        .paste-method-selector {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 4px 6px;
+            font-size: 12px;
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            outline: none;
+            cursor: pointer;
+        }
+
+        body.dark-theme .paste-method-selector {
+            background: rgba(60, 60, 60, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .paste-method-selector:focus {
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+
+        body.dark-theme .paste-method-selector:focus {
+            border-color: rgba(96, 165, 250, 0.6);
+        }
+
+        /* 清空剪贴板选项 */
+        .clear-clipboard-option {
+            position: absolute;
+            top: 8px;
+            right: 110px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 4px 6px;
+            font-size: 11px;
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        body.dark-theme .clear-clipboard-option {
+            background: rgba(60, 60, 60, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .clear-clipboard-option input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        
-        
         <div class="input-container">
-            <textarea 
-                class="input-field" 
-                v-model="inputText" 
+            <textarea
+                class="input-field"
+                v-model="inputText"
                 @keydown="handleKeyDown"
                 ref="inputField"
                 placeholder="输入内容后，按回车发送 | Ctrl+↑↓ 浏览历史记录"
                 autofocus
             ></textarea>
+
+            <div class="clear-clipboard-option" v-if="showClearClipboard">
+                <input
+                    type="checkbox"
+                    id="clearClipboard"
+                    v-model="clearClipboard"
+                    @change="saveClearClipboardPreference"
+                >
+                <label for="clearClipboard" style="cursor: pointer;">清空剪贴板</label>
+            </div>
+
+            <select
+                class="paste-method-selector"
+                v-model="selectedPasteMethod"
+                @change="savePasteMethodPreference"
+                ref="pasteMethodSelector"
+            >
+                <option value="mouse-middle">鼠标中键</option>
+                <option value="ctrl-shift-v">Ctrl+Shift+V</option>
+                <option value="ctrl-v">Ctrl+V</option>
+            </select>
         </div>
     </div>
 
     <script>
         const { createApp } = Vue;
-        
+
         createApp({
             data() {
                 return {
@@ -147,25 +226,43 @@
                     currentTheme: 'light',
                     history: [],
                     historyIndex: -1,
-                    tempInputText: '' // 保存用户当前输入的内容
+                    tempInputText: '', // 保存用户当前输入的内容
+                    selectedPasteMethod: 'mouse-middle', // 默认粘贴方式
+                    clearClipboard: false, // 是否清空剪贴板
+                    showClearClipboard: true // 是否显示清空剪贴板选项
                 };
             },
             async mounted() {
                 // 清空输入内容
                 this.inputText = '';
-                
+
                 // 自动聚焦到输入框
                 this.$refs.inputField.focus();
-                
+
                 // 加载配置并应用主题
                 try {
                     const config = await window.electronAPI.getConfig();
                     this.currentTheme = config.theme || 'light';
+                    // 处理粘贴方式的配置值
+                    const pm = config.pasteMethod || 'mouse-middle';
+                    // 统一格式：将 ctrlShiftV 转换为 ctrl-shift-v
+                    if (pm === 'ctrlShiftV' || pm === 'ctrl+shift+v') {
+                        this.selectedPasteMethod = 'ctrl-shift-v';
+                    } else if (pm === 'ctrlV' || pm === 'ctrl+v') {
+                        this.selectedPasteMethod = 'ctrl-v';
+                    } else if (pm === 'mouse-middle' || pm === 'middleClick') {
+                        this.selectedPasteMethod = 'mouse-middle';
+                    } else {
+                        this.selectedPasteMethod = pm;
+                    }
+
+                    this.clearClipboard = config.clearClipboard || false;
+                    this.showClearClipboard = config.showClearClipboardOption !== false;
                     this.applyTheme();
                 } catch (error) {
                     console.error('加载配置失败:', error);
                 }
-                
+
                 // 加载历史记录
                 try {
                     this.history = await window.electronAPI.getHistory();
@@ -173,14 +270,14 @@
                     console.error('加载历史记录失败:', error);
                     this.history = [];
                 }
-                
+
                 // 监听主题更新
                 if (window.electronAPI && window.electronAPI.onThemeUpdated) {
                     window.electronAPI.onThemeUpdated((theme) => {
                         this.updateTheme(theme);
                     });
                 }
-                
+
                 // 监听清空输入区的通知
                 if (window.electronAPI && window.electronAPI.onClearInput) {
                     window.electronAPI.onClearInput(() => {
@@ -189,7 +286,7 @@
                         this.tempInputText = '';
                     });
                 }
-                
+
                 // 监听历史记录重新加载通知
                 if (window.electronAPI && window.electronAPI.onHistoryReload) {
                     window.electronAPI.onHistoryReload(async () => {
@@ -213,16 +310,43 @@
                         body.classList.remove('dark-theme');
                     }
                 },
-                
+
                 updateTheme(newTheme) {
                     this.currentTheme = newTheme;
                     this.applyTheme();
                 },
-                
+
+                async savePasteMethodPreference() {
+                    try {
+                        const config = await window.electronAPI.getConfig();
+                        config.pasteMethod = this.selectedPasteMethod;
+                        await window.electronAPI.saveConfig(config);
+                        console.log('粘贴方式偏好已保存:', this.selectedPasteMethod);
+                    } catch (error) {
+                        console.error('保存粘贴方式偏好失败:', error);
+                    }
+                },
+
+                async saveClearClipboardPreference() {
+                    try {
+                        const config = await window.electronAPI.getConfig();
+                        config.clearClipboard = this.clearClipboard;
+                        await window.electronAPI.saveConfig(config);
+                        console.log('清空剪贴板偏好已保存:', this.clearClipboard);
+                    } catch (error) {
+                        console.error('保存清空剪贴板偏好失败:', error);
+                    }
+                },
+
                 async sendText() {
                     if (this.inputText.trim()) {
                         try {
-                            window.electronAPI.sendText(this.inputText.trim());
+                            // 传递文本和粘贴方式
+                            await window.electronAPI.sendText({
+                                text: this.inputText.trim(),
+                                pasteMethod: this.selectedPasteMethod,
+                                clearClipboard: this.clearClipboard
+                            });
                             // 发送成功后立即清空输入区
                             this.inputText = '';
                             this.historyIndex = -1;
@@ -232,15 +356,15 @@
                         }
                     }
                 },
-                
+
                 navigateHistory(direction) {
                     if (this.history.length === 0) return;
-                    
+
                     // 如果是第一次按Ctrl+上箭头，保存当前输入内容
                     if (this.historyIndex === -1) {
                         this.tempInputText = this.inputText;
                     }
-                    
+
                     // 计算新的历史记录索引
                     let newIndex;
                     if (direction === 1) {
@@ -260,9 +384,9 @@
                             newIndex = -1; // 回到用户输入
                         }
                     }
-                    
+
                     this.historyIndex = newIndex;
-                    
+
                     // 更新输入框内容
                     if (this.historyIndex === -1) {
                         // 回到用户输入的内容
@@ -271,14 +395,14 @@
                         // 显示历史记录
                         this.inputText = this.history[this.historyIndex];
                     }
-                    
+
                     console.log('历史记录导航:', {
                         direction: direction === 1 ? '上' : '下',
                         newIndex: this.historyIndex,
                         content: this.historyIndex === -1 ? '用户输入' : this.history[this.historyIndex]
                     });
                 },
-                
+
                 handleKeyDown(event) {
                     if (event.key === 'Enter') {
                         // 阻止默认的换行行为
@@ -300,7 +424,7 @@
                         this.tempInputText = '';
                     }
                 },
-                
+
                 closeWindow() {
                     window.electronAPI.hideInputWindow();
                 }
