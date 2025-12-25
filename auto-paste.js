@@ -43,10 +43,17 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
     const verifyClipboard = clipboard.readText();
     console.log('验证剪贴板内容:', verifyClipboard);
 
-    // 暂时禁用窗口激活，直接粘贴（焦点会自动返回到之前的窗口）
-    // 如果后续需要启用，可以在设置中添加选项
-    console.log('跳过窗口激活，直接执行粘贴');
-    await new Promise(resolve => setTimeout(resolve, 50)); // 极短延迟确保输入框隐藏完成
+    // 根据平台决定是否需要先激活窗口
+    if (process.platform === 'win32' && targetWindowProcessId) {
+      console.log('Windows平台，激活目标窗口');
+      await activateCurrentWindow(targetWindowProcessId);
+      // 不延迟，VBScript执行很快
+    } else if (process.platform === 'darwin') {
+      console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
+      await leftClick();
+      // macOS延迟10ms即可
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
 
     // 根据选择的方式执行粘贴
     switch (pasteMethod) {
