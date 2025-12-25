@@ -30,7 +30,7 @@ let config = {
   windowHeight: 120,
   windowWidth: 600,
   pasteMethod: 'ctrlShiftV', // 默认使用Ctrl+Shift+V粘贴
-  restoreClipboard: false // 默认不恢复剪贴板
+  restoreClipboard: true // 默认恢复剪贴板
 };
 
 // 历史记录配置
@@ -168,13 +168,12 @@ async function createInputWindow() {
     }
   };
 
-  // 所有平台都使用无边框窗口
+  // 所有平台都使用无边框透明窗口
   windowOptions.frame = false;
-  // HyperV 不支持透明窗口，所以禁用透明
   windowOptions.transparent = false;
   windowOptions.roundedCorners = true;
-  // 应用透明度设置（对非透明窗口无效，但保留配置）
-  windowOptions.opacity = 1.0;
+  // 应用透明度设置
+  windowOptions.opacity = Math.max(config.opacity / 100, 0.5);
   
   // macOS特殊设置，确保在全屏应用上方显示但不遮挡输入法
   if (process.platform === 'darwin') {
@@ -192,11 +191,11 @@ async function createInputWindow() {
   inputWindow.setAlwaysOnTop(true, 'screen-saver');
 
   inputWindow.loadFile('input.html');
-  
-  // 开发模式下打开开发者工具
-  if (isDev) {
-    inputWindow.webContents.openDevTools();
-  }
+
+  // 开发模式下打开开发者工具 - 已禁用
+  // if (isDev) {
+  //   inputWindow.webContents.openDevTools();
+  // }
 
   inputWindow.on('closed', () => {
     inputWindow = null;
@@ -274,11 +273,11 @@ function createSettingsWindow() {
 
     console.log('设置窗口创建成功，加载HTML文件');
     settingsWindow.loadFile('settings.html');
-    
-    // 开发模式下打开开发者工具
-    if (isDev) {
-      settingsWindow.webContents.openDevTools();
-    }
+
+    // 开发模式下打开开发者工具 - 已禁用
+    // if (isDev) {
+    //   settingsWindow.webContents.openDevTools();
+    // }
 
     settingsWindow.on('closed', () => {
       console.log('设置窗口已关闭');
