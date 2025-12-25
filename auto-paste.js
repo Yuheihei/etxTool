@@ -42,93 +42,55 @@ async function autoPaste(text, pasteMethod = 'middleClick', targetWindowProcessI
     // 立即验证剪贴板内容（不需要延迟，writeText是同步的）
     const verifyClipboard = clipboard.readText();
     console.log('验证剪贴板内容:', verifyClipboard);
-    
-    // 根据平台决定是否需要先左键点击
-    try {
-      // 暂时禁用窗口激活，直接粘贴（焦点会自动返回到之前的窗口）
-      // 如果后续需要启用，可以在设置中添加选项
-      /*
-      // Windows平台：先激活窗口，再进行粘贴
-      if (process.platform === 'win32') {
-        console.log('Windows平台，激活目标窗口');
 
-        if (targetWindowProcessId) {
-          const activateSuccess = await activateCurrentWindow(targetWindowProcessId);
-          if (activateSuccess) {
-            console.log('目标窗口激活成功');
-          } else {
-            console.log('目标窗口激活失败，继续执行粘贴操作');
-          }
-        } else {
-          console.log('未提供目标窗口PID，跳过窗口激活');
-        }
+    // 暂时禁用窗口激活，直接粘贴（焦点会自动返回到之前的窗口）
+    // 如果后续需要启用，可以在设置中添加选项
+    console.log('跳过窗口激活，直接执行粘贴');
+    await new Promise(resolve => setTimeout(resolve, 50)); // 极短延迟确保输入框隐藏完成
 
-        // 延迟确保窗口激活完成（PowerShell需要时间）
-        await new Promise(resolve => setTimeout(resolve, 150));
-      }
-      // macOS需要先左键点击切换窗口焦点
-      else if (process.platform === 'darwin') {
-        console.log('macOS平台，执行鼠标左键点击切换窗口焦点');
-        await leftClick();
-        console.log('鼠标左键点击成功');
+    // 根据选择的方式执行粘贴
+    switch (pasteMethod) {
+      case 'middleClick':
+        // 执行鼠标中键点击进行粘贴
+        console.log('执行鼠标中键点击');
+        await middleClick();
+        console.log('鼠标中键点击成功');
+        break;
 
-        // 短暂延迟确保窗口焦点切换完成
-        await new Promise(resolve => setTimeout(resolve, 50));
-      } else {
-        console.log('Linux平台，跳过窗口激活和左键点击');
-      }
-      */
-      console.log('跳过窗口激活，直接执行粘贴');
-      await new Promise(resolve => setTimeout(resolve, 50)); // 极短延迟确保输入框隐藏完成
+      case 'ctrlV':
+        // 执行 Ctrl+V 粘贴
+        console.log('执行 Ctrl+V 粘贴');
+        await keyboard.pressKey(Key.LeftControl);
+        await keyboard.pressKey(Key.V);
+        await keyboard.releaseKey(Key.V);
+        await keyboard.releaseKey(Key.LeftControl);
+        console.log('Ctrl+V 粘贴成功');
+        break;
+
+      case 'ctrlShiftV':
+        // 执行 Ctrl+Shift+V 粘贴
+        console.log('执行 Ctrl+Shift+V 粘贴');
+        await keyboard.pressKey(Key.LeftControl);
+        await keyboard.pressKey(Key.LeftShift);
+        await keyboard.pressKey(Key.V);
+        await keyboard.releaseKey(Key.V);
+        await keyboard.releaseKey(Key.LeftShift);
+        await keyboard.releaseKey(Key.LeftControl);
+        console.log('Ctrl+Shift+V 粘贴成功');
+        break;
+
+      default:
+        // 默认使用鼠标中键
+        console.log('执行默认鼠标中键点击');
+        await middleClick();
+        console.log('鼠标中键点击成功');
     }
-      
-      // 根据选择的方式执行粘贴
-      switch (pasteMethod) {
-        case 'middleClick':
-          // 执行鼠标中键点击进行粘贴
-          console.log('执行鼠标中键点击');
-          await middleClick();
-          console.log('鼠标中键点击成功');
-          break;
-          
-        case 'ctrlV':
-          // 执行 Ctrl+V 粘贴
-          console.log('执行 Ctrl+V 粘贴');
-          await keyboard.pressKey(Key.LeftControl);
-          await keyboard.pressKey(Key.V);
-          await keyboard.releaseKey(Key.V);
-          await keyboard.releaseKey(Key.LeftControl);
-          console.log('Ctrl+V 粘贴成功');
-          break;
-          
-        case 'ctrlShiftV':
-          // 执行 Ctrl+Shift+V 粘贴
-          console.log('执行 Ctrl+Shift+V 粘贴');
-          await keyboard.pressKey(Key.LeftControl);
-          await keyboard.pressKey(Key.LeftShift);
-          await keyboard.pressKey(Key.V);
-          await keyboard.releaseKey(Key.V);
-          await keyboard.releaseKey(Key.LeftShift);
-          await keyboard.releaseKey(Key.LeftControl);
-          console.log('Ctrl+Shift+V 粘贴成功');
-          break;
-          
-        default:
-          // 默认使用鼠标中键
-          console.log('执行默认鼠标中键点击');
-          await middleClick();
-          console.log('鼠标中键点击成功');
-      }
-      
-      // 再次验证剪贴板内容，确保没有在粘贴过程中被改变
-      const afterPasteClipboard = clipboard.readText();
-      console.log('粘贴后剪贴板内容:', afterPasteClipboard);
-      
-      return true;
-    } catch (error) {
-      console.error('粘贴操作失败:', error);
-      return false;
-    }
+
+    // 再次验证剪贴板内容，确保没有在粘贴过程中被改变
+    const afterPasteClipboard = clipboard.readText();
+    console.log('粘贴后剪贴板内容:', afterPasteClipboard);
+
+    return true;
   } catch (error) {
     console.error('自动粘贴出错:', error);
     return false;
